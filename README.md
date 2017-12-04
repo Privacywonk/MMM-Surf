@@ -35,6 +35,7 @@ You will need to source a few bits of information to configure the MMM-Surf modu
 
 2. [NOAA Tide and Current](https://tidesandcurrents.noaa.gov) for the station_id config item
 Find the closest measuring station to your spot. Click the map pin to open the details of the station. Copy the station_id number that appears before the location. 9415020 for the point Reyes, CA example below.
+
 ![image](https://user-images.githubusercontent.com/9799911/33579008-504e3b70-d916-11e7-9911-679720264106.png)
 
 3. Wunderground Location for WuPWS config item. Multiple acceptable formats can be accepted:
