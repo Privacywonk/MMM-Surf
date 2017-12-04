@@ -9,14 +9,11 @@ MMM-Surf is a Magic Mirror module that will display weather, tides, water temp, 
 
 To get MMM-Surf up and running, you will need to do some scouting homework.
 
-```
-[Wunderground API key](https://www.wunderground.com/weather/api/d/pricing.html)
 
-[Magicseaweed API key](https://magicseaweed.com/developer/api)
-Note: Magicseaweed's API is in beta mode and is not instanteonous though the people are awesome and very responsive via email
+* [Wunderground API key](https://www.wunderground.com/weather/api/d/pricing.html)
 
-NOAA Tide and Current Monitoring Station ID  - https://tidesandcurrents.noaa.gov/images/icons/high_low_water_alert.png
-```
+*[Magicseaweed API key](https://magicseaweed.com/developer/api)
+**Note: Magicseaweed's API is in beta mode and is not instanteonous though the people are awesome and very responsive via email
 
 ### Installing
 
@@ -29,7 +26,7 @@ cd ./MagicMirror/modules/
 git clone https://github.com/Privacywonk/MMM-Surf
 ```
 
-## Configureation
+## Config 
 You will need to source a few bits of information to configure the MMM-Surf module:
 1. Magicseaweed spot ID for the MagicSeaweedSpotID config item. For example, 391 from https://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/
 
