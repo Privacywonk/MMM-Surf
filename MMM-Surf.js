@@ -16,14 +16,14 @@ Module.register("MMM-Surf", {
 
     // Default module config.
     defaults: {
-		MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
-		MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
-		MagicAPI: "",
-		debug: 1,
+	MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
+	MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
+	MagicAPI: "",
+	debug: 1,
         Wuapikey: "",
         WuPWS: "",
-		station_id: "", //Numeric station ID from NOAA
-		noaatz:"", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
+	station_id: "", //Numeric station ID from NOAA
+	noaatz:"", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
         currentweather: 1,
         coloricon: false,
         units: config.units,
@@ -38,7 +38,7 @@ Module.register("MMM-Surf", {
         tz: "",
         fcdaycount: "5",
         fcdaystart: "0",
-		daily: "1",
+	daily: "1",
         hourly: "0",
         hourlyinterval: "3",
         hourlycount: "2",
@@ -51,14 +51,14 @@ Module.register("MMM-Surf", {
         scaletxt: 1,
         iconset: "VCloudsWeatherIcons",
         enableCompliments: 0,
-		retryDelay: 2500,
-		//Wunderground API Base
-		WuapiBase: "http://api.wunderground.com/api/",
-		// Magicseaweed API Configuration
-		MagicSeaweedAPIBase: "http://magicseaweed.com/api/",
-		forecastEndpoint: "/forecast/?spot_id=",
-		// NOAA API Configuration
-		NOAAapiBase: "https://tidesandcurrents.noaa.gov/api/",
+	retryDelay: 2500,
+	//Wunderground API Base
+	WuapiBase: "http://api.wunderground.com/api/",
+	// Magicseaweed API Configuration
+	MagicSeaweedAPIBase: "http://magicseaweed.com/api/",
+	forecastEndpoint: "/forecast/?spot_id=",
+	// NOAA API Configuration
+	NOAAapiBase: "https://tidesandcurrents.noaa.gov/api/",
 
         iconTableDay: {
             "chanceflurries": "wi-day-snow-wind",
