@@ -1,0 +1,142 @@
+.MMM-Surf .weathericon {
+  font-size: 45%;
+  line-height: 5px;
+  display: inline-block;
+  -ms-transform: translate(0, -3px); /* IE 9 */
+  -webkit-transform: translate(0, -3px); /* Safari */
+  transform: translate(0, -3px);
+} 
+.MMM-Surf .day {
+  padding-left: 0;
+#  padding-right: 10px;
+}
+
+.MMM-Surf .vcen {
+   vertical-align: top;
+}
+
+.MMM-Surf .weather-icon {
+  padding-left: 0px;
+  text-align: center;
+  width:50px; 
+}
+
+.MMM-Surf .max-temp {
+  padding-left: 0px;
+  padding-right: 0;
+}
+
+.MMM-Surf .min-temp {
+#  padding-left: 10px;
+#  padding-right: 0;
+}
+
+.MMM-Surf .forecastText {
+# padding-left: 10px;
+#  padding-right: 0;
+#  word-wrap: break-word;
+#  text-align: right;
+#  rowspan: 0;
+}
+
+.MMM-Surf .tableheader {
+  font-size: 75%;
+  text-align: center;
+} 
+
+.MMM-Surf .hour {
+  font-size: 75%;
+  text-align: center;
+ } 
+
+.MMM-Surf .pop {
+  font-size: 86%;
+} 
+.MMM-Surf .mm {
+  font-size: 75%;
+} 
+
+.MMM-Surf .mmpad {
+  font-size: 75%;
+  padding-top:0px;
+  padding-bottom:5px;
+}
+
+
+.MMM-Surf .green {
+  color: #83FFB3;
+}
+
+.MMM-Surf .yellow {
+  color: yellow;
+}
+
+.MMM-Surf .red {
+  color: #FF4C4C;
+}
+
+.MMM-Surf .center {
+	text-align: center;
+	padding-right: 10px; 
+}
+	
+.MMM-Surf .left {
+	text-align: left;
+}
+
+.MMM-Surf .lpad {
+	padding-left: 10px; 
+}
+
+
+.MMM-Surf .currentTideIcon {
+  font-size: 75%;
+  line-height: 45px;
+  display: inline-block;
+  -ms-transform: translate(0, -3px); /* IE 9 */
+  -webkit-transform: translate(0, -3px); /* Safari */
+  transform: translate(0, -3px);
+  width: 40%;
+  height: 40%;
+}
+
+
+.MMM-Surf .currentWeatherIcon {
+  font-size: 75%;
+  line-height: 45px;
+  display: inline-block;
+  -ms-transform: translate(0, -3px); /* IE 9 */
+  -webkit-transform: translate(0, -3px); /* Safari */
+  transform: translate(0, -3px);
+  width: 40%;
+  height: 40%;
+} 
+
+.MMM-Surf .forecastWeatherIcon {
+  font-size: 75%;
+  line-height: 65px;
+  display: inline-block;
+  -ms-transform: translate(0, -3px); /* IE 9 */
+  -webkit-transform: translate(0, -3px); /* Safari */
+  transform: translate(0, -3px);
+  width: 50%;
+} 
+
+
+.MMM-Surf .moonPhaseIcon {
+  height: 34px;
+  vertical-align: middle;
+} 
+
+.MMM-Surf .hrDivider {
+        font-size: 10px;
+}
+
+.MMM-Surf .sub {
+    vertical-align: sub;
+    font-size: smaller;
+}
+
+.MMM-Surf .smaller {
+    font-size: 60%;
+}
