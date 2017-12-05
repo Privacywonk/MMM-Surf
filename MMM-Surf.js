@@ -16,19 +16,19 @@ Module.register("MMM-Surf", {
 
     // Default module config.
     defaults: {
-	MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
-	MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
-	MagicAPI: "",
-	debug: "",
-        Wuapikey: "",
-        WuPWS: "",
-	station_id: "", //Numeric station ID from NOAA
-	noaatz:"", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
+	MagicSeaweedSpotID: "", 	//REQUIRED: spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
+	MagicSeaweedSpotName: "", 	//REQUIRED: shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
+	MagicAPI: "",			//REQUIRED: Magicseaweed API Key
+	debug: "",			
+        Wuapikey: "",			//REQUIRED: Wunderground API key
+        WuPWS: "",			//REQUIRED: Wunderground Location, e.g. "pws:KCASANFR99" or "CA/San_Francisco" or "60290" or "PHL" 
+	station_id: "", 		//REQUIRED: Numeric station ID from NOAA
+	noaatz:"", 			//OPTIONAL: gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
         currentweather: 1,
         coloricon: false,
         units: config.units,
         windunits: "bft", // choose from mph, bft
-        updateInterval: 3600000, //60 minutes in miliseconds
+        updateInterval: 3600000, //1 Hour (60 minutes) in miliseconds  -  Hardcoded as we don't need to hammer this API.
         animationSpeed: 1000,
         timeFormat: config.timeFormat,
         lang: config.language,
