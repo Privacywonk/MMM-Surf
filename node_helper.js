@@ -104,7 +104,7 @@ module.exports = NodeHelper.create({
         //NOAA asks us to send the application name when making API requests
 
 
-        var NOAAWaterTempURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=water_temperature&application=MMM-Surf&begin_date=" + todayString + "&end_date=" + tomorrowString + "&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=h&format=json")
+        var NOAAWaterTempURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=water_temperature&application=MMM-Surf&begin_date=" + todayString + "&end_date=" + tomorrowString + "&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=h&format=json");
             //if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Water Temp API REQUEST(3): " + this.name  + ": " + NOAAWaterTempURL);}
         if (this.config.debug === 1) {
             apiMessage = moment().format() + " HELPER: NOAA Water Temp API REQUEST(3): " + NOAAWaterTempURL;
@@ -144,7 +144,7 @@ module.exports = NodeHelper.create({
         //NOAA Tide Data
         //NOAA asks us to send the application name when making API requests
 
-        var NOAAtideURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=predictions&application=MMM-Surfer&begin_date=" + todayString + "&end_date=" + tomorrowString + "&datum=MLLW&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=hilo&format=json")
+        var NOAAtideURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=predictions&application=MMM-Surfer&begin_date=" + todayString + "&end_date=" + tomorrowString + "&datum=MLLW&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=hilo&format=json");
             //if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Tide Data API REQUEST(3): " + this.name  + ": " + NOAAtideURL);}
         if (this.config.debug === 1) {
             apiMessage = moment().format() + " HELPER: NOAA Tide Data API REQUEST(3): " + NOAAtideURL;
@@ -172,6 +172,7 @@ module.exports = NodeHelper.create({
                     }
                 }
 
+		setTimeout(function() {
                     //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}				
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(Tide): ' + self.config.updateInterval;
@@ -193,7 +194,7 @@ module.exports = NodeHelper.create({
         this.MAGICfetcherRunning = true;
         //Magicseaweed URL
 
-        var magicseaweedURL = encodeURI(this.config.MagicSeaweedAPIBase + this.config.MagicAPI + this.config.forecastEndpoint + this.config.MagicSeaweedSpotID)
+        var magicseaweedURL = encodeURI(this.config.MagicSeaweedAPIBase + this.config.MagicAPI + this.config.forecastEndpoint + this.config.MagicSeaweedSpotID);
             //if ( this.config.debug === 1 ) {console.log(moment().format() + " Magicseaweed API REQUEST(3): " + magicseaweedURL);}
         if (this.config.debug === 1) {
             apiMessage = moment().format() + " HELPER: Magicseaweed API REQUEST(3): " + magicseaweedURL;
