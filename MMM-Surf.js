@@ -19,7 +19,7 @@ Module.register("MMM-Surf", {
 	MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
 	MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
 	MagicAPI: "",
-	debug: 1,
+	debug: "",
         Wuapikey: "",
         WuPWS: "",
 	station_id: "", //Numeric station ID from NOAA
@@ -336,7 +336,7 @@ Module.register("MMM-Surf", {
 
 //Display Tide Data
 			var TideIcon = document.createElement("td");
-			TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + ".png" + "'>";
+			TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + ".png" + "'alt='CC:icon by https://thenounproject.com/xinhstudio/'>";
 			TideIcon.className = "wi";
 			row_watersitrep.appendChild(TideIcon);
 
@@ -351,7 +351,7 @@ Module.register("MMM-Surf", {
 
 //Display Next Tide Data and Time
 			var nextTideIcon = document.createElement("td");
-			nextTideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeNext + ".png" + "'>";
+			nextTideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeNext + ".png" + "'alt='CC:icon by https://thenounproject.com/xinhstudio/'>";;
 			nextTideIcon.className = "wi";
 			row_watersitrep.appendChild(nextTideIcon);
 		

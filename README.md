@@ -45,11 +45,14 @@ Find the closest measuring station to your spot. Click the map pin to open the d
 * KJFK - airport code
 * pws:KCASANFR70 - Personal Weather Station id
 
-I prefer the pws:STATIONID format as it can provide hyper localized conditions for a particular spot. To find a PWS ID:
+I prefer the pws:STATIONID format as it can provide hyper localized conditions for a particular spot; however, be warned that Personal Weather Stations vary in quality. 
+
+To find a PWS ID:
 * [Search Wunderground](https://www.wunderground.com/) for a major city name
 * Next to the City name there is a "CHANGE" menu item
 * Zoom around on the map to find the closest weather station and note the ID in parenthesis
 * If we wanted to use Kelly's Cove @ Ocean Beach, our config item would be pws:KCASANFR99 for the example below
+
 
 ![image](https://user-images.githubusercontent.com/9799911/33579383-a7cc39d2-d917-11e7-8133-4de5b43f9833.png)
 
@@ -60,12 +63,12 @@ I prefer the pws:STATIONID format as it can provide hyper localized conditions f
 		debug: "0",
 		position: 'top_left',
 		config: {
-				MagicSeaweedSpotID: '', // numeric spot ID from magicseaweed, e.g. "390"
-				MagicAPI: '', //magicseaweed API Key
-				station_id: '', //NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
-				noaatz: 'lst_ldt', //NOA time zone requests. 
-				Wuapikey: "", //Wunderground API 
-				WuPWS: "", // Wunderground Location 
+				MagicSeaweedSpotID: '', 	//REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
+				MagicAPI: '', 			//REQUIRED: magicseaweed API Key
+				station_id: '', 		//REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
+				Wuapikey: "", 			//REQUIRED: Wunderground API 
+				WuPWS: "", 			//REQUIRED: Wunderground Location, e.g. "pws:KCASANFR99" or "CA/San_Francisco" or "60290" or "PHL" 
+                                noaatz: 'lst_ldt', 		//NOAA time zone requests. Local Standard Time / Daylight time.
 				hourly: "1",
 				fctext: '1',
 				fcdaycount: "4",
