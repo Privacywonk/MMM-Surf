@@ -28,7 +28,7 @@ Module.register("MMM-Surf", {
         coloricon: false,
         units: config.units,
         windunits: "bft", // choose from mph, bft
-        updateInterval: 3600000, //60 minutes in miliseconds
+        updateInterval: 3600000, //1 Hour (60 minutes) in miliseconds  -  Hardcoded as we don't need to hammer this API.
         animationSpeed: 1000,
         timeFormat: config.timeFormat,
         lang: config.language,

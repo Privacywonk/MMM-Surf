@@ -13,6 +13,7 @@ const exec = require('child_process').exec;
 var helperDebug = "";
 
 
+
 module.exports = NodeHelper.create({
     start: function() {
         console.log(moment().format() + ' MMM-Surf helper started ...');
@@ -166,17 +167,20 @@ module.exports = NodeHelper.create({
                     //if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Tide Data API ERROR(4): ' + self.name + ': ' + error);}
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: NOAA Tide API ERROR (5):  ' + error;
+
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
-                setTimeout(function() {
+
                     //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}				
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(Tide): ' + self.config.updateInterval;
+
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                     self.fetchNOAAData();
                 }, self.config.updateInterval);
+
 
             } //end request(function())
         ); //end request() for NOAA Tides
@@ -293,3 +297,4 @@ module.exports = NodeHelper.create({
         } // end socketNotification
 
 }); //end helper module
+
