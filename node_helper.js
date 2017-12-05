@@ -4,309 +4,292 @@
  * By PrivacyWonk 
  * MIT Licensed.
  */
- 
+
 
 var NodeHelper = require('node_helper');
 var request = require('request');
 var moment = require('moment');
-const exec = require('child_process').exec; 
+const exec = require('child_process').exec;
 var helperDebug = "";
 
 
 module.exports = NodeHelper.create({
-	start: function () {
-		console.log(moment().format() +' MMM-Surf helper started ...');
-		//Wunderground Forecast
-		this.WufetcherRunning = false;
-		this.wunderPayload = "";
-		//NOAA Water Temp and Tides
-		this.NOAAfetcherRunning = false;
-		this.NOAAPayload = "";
-		//Magicseaweed Surf Forecast
-		this.MAGICfetcherRunning = false;
-		this.magicseaweed = "";
-},
+    start: function() {
+        console.log(moment().format() + ' MMM-Surf helper started ...');
+        //Wunderground Forecast
+        this.WufetcherRunning = false;
+        this.wunderPayload = "";
+        //NOAA Water Temp and Tides
+        this.NOAAfetcherRunning = false;
+        this.NOAAPayload = "";
+        //Magicseaweed Surf Forecast
+        this.MAGICfetcherRunning = false;
+        this.magicseaweed = "";
+    },
 
-/* 
- * build Wunderground API request
- * Original code from RedNax's MMM-Wunderground module
- *
- */
-  fetchWunderground: function() {
+    /* 
+     * build Wunderground API request
+     * Original code from RedNax's MMM-Wunderground module
+     *
+     */
+    fetchWunderground: function() {
         var self = this;
-        this.WufetcherRunning = true; 
-		var apiMessage = "";
-        var params = this.config.Wuapikey;
+        this.WufetcherRunning = true;
+        var apiMessage = "";
+
         var wulang = this.config.lang.toUpperCase();
         if (wulang == "DE") {
             wulang = "DL";
         }
-        params +=
-            "/conditions/hourly/forecast10day/astronomy/alerts/lang:" +
-            wulang;
-        params += "/q/" + this.config.WuPWS;
-        params += ".json";
-        
-        var Wurl = this.config.WuapiBase + params;
-		//if ( this.config.debug === 1 ) {console.log(moment().format() + "  HELPER: Wunderground Data API REQUEST (3):  "  + Wurl);}
-		if ( this.config.debug === 1 ) {
-			apiMessage = moment().format() + " HELPER: Wunderground Data API REQUEST (3):  "  + Wurl;
-			self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-		}
+        var Wurl = encodeURI(this.config.WuapiBase + this.config.Wuapikey + "/conditions/hourly/forecast10day/astronomy/alerts/lang:" + wulang + "/q/" + this.config.WuPWS + ".json");
+
+        //if ( this.config.debug === 1 ) {console.log(moment().format() + "  HELPER: Wunderground Data API REQUEST (3):  "  + Wurl);}
+        if (this.config.debug === 1) {
+            apiMessage = moment().format() + " HELPER: Wunderground Data API REQUEST (3):  " + Wurl;
+            self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+        }
         request({
-            url: Wurl,
-            method: 'GET'
-                }, 
-			function(error, response, body) {
+                url: Wurl,
+                method: 'GET'
+            },
+            function(error, response, body) {
 
-			if (!error && response.statusCode == 200) {
-				this.wunderPayload = body;
-				//if ( self.config.debug === 1 ) {console.log(moment().format() + ' Wunderground Data API RESPONSE (4): [body not displayed]');}
-				//for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
-				//but with declaration of self = this...we change to self.config.debug et voila.
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + '  HELPER: Wunderground Data API RESPONSE (4): Received';
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}
-				self.sendSocketNotification('WUNDERGROUND',body);
-			} else {
-				//if ( self.config.debug === 1 ) {console.log(moment().format() + '  Wunderground Data API ERROR (5):  ' + error);}
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + '  HELPER: Wunderground Data API ERROR (5):  ' + error;
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}
-			}
-			setTimeout(function() {
-			//if ( self.config.debug === 1 ) {console.log(moment().format() + ' setTimeout called in Wunderground module ' + self.config.updateInterval);}
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + ' HELPER: setTimeout called in fetchWunderground: ' + self.config.updateInterval;
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}			
-				self.fetchWunderground();
-			}, self.config.updateInterval);
-			} // end request(function())
-		); // end request()
-	this.WufetcherRunning = false; // turn our running flag off.
+                if (!error && response.statusCode == 200) {
+                    this.wunderPayload = body;
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' Wunderground Data API RESPONSE (4): [body not displayed]');}
+                    //for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
+                    //but with declaration of self = this...we change to self.config.debug et voila.
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + '  HELPER: Wunderground Data API RESPONSE (4): Received';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.sendSocketNotification('WUNDERGROUND', body);
+                } else {
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + '  Wunderground Data API ERROR (5):  ' + error);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + '  HELPER: Wunderground Data API ERROR (5):  ' + error;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                }
+                setTimeout(function() {
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' setTimeout called in Wunderground module ' + self.config.updateInterval);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: setTimeout called in fetchWunderground: ' + self.config.updateInterval;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.fetchWunderground();
+                }, self.config.updateInterval);
+            } // end request(function())
+        ); // end request()
+        this.WufetcherRunning = false; // turn our running flag off.
 
-  }, //end fetchWunderground
+    }, //end fetchWunderground
 
-/* 
- * 
- * build NOAA API requests for Tide and Water Temp
- *
- */
+    /* 
+     * 
+     * build NOAA API requests for Tide and Water Temp
+     *
+     */
 
-  fetchNOAAData: function() {
-	var self = this;
-	this.NOAAfetcherRunning = true;
-	var apiMessage = ""
-	var station_id = this.config.station_id;
-	var noaatz = this.config.noaatz;
-	var todayString = moment().format('YYYYMMDD');
-	var tomorrow = moment().add(1, 'day');
-	var tomorrowString = tomorrow.format('YYYYMMDD');
-//NOAA Water Temperature
-	var params = "datagetter?product=water_temperature&application=MMM-Surf&begin_date=" + todayString;
-	//NOAA asks us to send the application name when making API requests
-	params += "&end_date=" + tomorrowString;
-	params += "&station=" + station_id;
-	params += "&time_zone=" + noaatz;
-	params += "&units=english&interval=h&format=json";
-
-	var NOAAWaterTempURL = this.config.NOAAapiBase + params;
-	//if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Water Temp API REQUEST(3): " + this.name  + ": " + NOAAWaterTempURL);}
-	if ( this.config.debug === 1 ) {
-		apiMessage = moment().format() + " HELPER: NOAA Water Temp API REQUEST(3): " + NOAAWaterTempURL;
-		self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-	}		
-		
-	request({
-		url: NOAAWaterTempURL,
-		method: 'GET'
-			}, function(error, response, body) {
-
-				if (!error && response.statusCode == 200) {
-					this.NOAAPayload = body;
-					//if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Water Temp API RESULT(4): ' + self.name + ': ' + body);}
-					if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: NOAA Water Temp API RESULT(4): Received';
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-					}
-					self.sendSocketNotification('NOAA_WATERTEMP',body);
-				} else {
-					//if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
-					if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: NOAA Water Temp API ERROR (5):  ' + error;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-					}			
-				}
-				setTimeout(function() {
-				//if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(WaterTemp): ' + self.config.updateInterval;
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}					
-				   self.fetchNOAAData();
-				}, self.config.updateInterval);
-			} //end request(function())
-	);//end request() for Water Temp
-//NOAA Tide Data
-	params2 ="datagetter?product=predictions&application=MMM-Surfer&begin_date=" + todayString;
-	//NOAA asks us to send the application name when making API requests
-	params2 +="&end_date=" + tomorrowString;
-	params2 +="&datum=MLLW&station=" + station_id;
-	params2 +="&time_zone=" + noaatz;
-	params2 +="&units=english&interval=hilo&format=json";
-
-	var NOAAtideURL = this.config.NOAAapiBase + params2;
-	//if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Tide Data API REQUEST(3): " + this.name  + ": " + NOAAtideURL);}
-	if ( this.config.debug === 1 ) {
-		apiMessage = moment().format() + " HELPER: NOAA Tide Data API REQUEST(3): " + NOAAtideURL;
-		self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-	}		
-	request({
-	url: NOAAtideURL,
-	method: 'GET'
-		}, 
-		function(error, response, body) {
-			if (!error && response.statusCode == 200) {
-				this.NOAAPayload = body;
-				//if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Tide Data API RESULT(4): ' + self.name + ': ' + body);}
-				if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: NOAA Tide Data API RESULT(4): Received';
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}
-				self.sendSocketNotification('NOAA_TIDE_DATA',body);
-			} else {
-				//if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Tide Data API ERROR(4): ' + self.name + ': ' + error);}
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + ' HELPER: NOAA Tide API ERROR (5):  ' + error;
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}	
-			}
-			setTimeout(function() {
-				//if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}				
-				if ( self.config.debug === 1 ) {
-					apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(Tide): ' + self.config.updateInterval;
-					self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-				}
-			   self.fetchNOAAData();
-			}, self.config.updateInterval);
-
-		} //end request(function())
-	); //end request() for NOAA Tides
-	this.NOAAfetcherRunning = false;
-  }, // end fetchNOAA function
-
-  fetchMagicseaweedData: function() {
+    fetchNOAAData: function() {
         var self = this;
-		var apiMessage = "";
-        this.MAGICfetcherRunning = true;
-		//Magicseaweed URL
-        var params3 = this.config.MagicAPI + this.config.forecastEndpoint +this.config.MagicSeaweedSpotID;
+        this.NOAAfetcherRunning = true;
+        var apiMessage = ""
+        var station_id = this.config.station_id;
+        var noaatz = this.config.noaatz;
+        var todayString = moment().format('YYYYMMDD');
+        var tomorrowString = moment().add(1, 'day').format('YYYYMMDD');
+        //NOAA Water Temperature
+        //NOAA asks us to send the application name when making API requests
 
-        var magicseaweedURL = this.config.MagicSeaweedAPIBase + params3;
-		//if ( this.config.debug === 1 ) {console.log(moment().format() + " Magicseaweed API REQUEST(3): " + magicseaweedURL);}
-		if ( this.config.debug === 1 ) {
-			apiMessage = moment().format() + " HELPER: Magicseaweed API REQUEST(3): " + magicseaweedURL;
-			self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-		}	
+
+        var NOAAWaterTempURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=water_temperature&application=MMM-Surf&begin_date=" + todayString + "&end_date=" + tomorrowString + "&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=h&format=json")
+            //if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Water Temp API REQUEST(3): " + this.name  + ": " + NOAAWaterTempURL);}
+        if (this.config.debug === 1) {
+            apiMessage = moment().format() + " HELPER: NOAA Water Temp API REQUEST(3): " + NOAAWaterTempURL;
+            self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+        }
+
         request({
-        url: magicseaweedURL,
-        method: 'GET'
-                }, 
-			function(error, response, body) {
-				if (!error && response.statusCode == 200) {
-					this.magicseaweed = body;
-					//if ( self.config.debug === 1 ) {console.log(moment().format() + " Magicseaweed API RESULT(4): " + self.name + ": +body);}
-					if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: Magicseaweed API RESULT(4): Received';
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-					}
-					self.sendSocketNotification('MAGICSEAWEED',body);
-				} else {
-					//if ( self.config.debug === 1 ) {console.log(moment().format() + ' Magicseaweed API ERROR(4): ' + self.name + ': ' + error);}
-					if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: Magicseaweed API ERROR(4):  ' + error;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-					}	
-				}
-				setTimeout(function() {
-					//if ( self.config.debug === 1 ) {console.log('setTimeout called in MagicSeaweed module ' + self.config.updateInterval);}
-					if ( self.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER: setTimeout called in fetchMagicseaweedData: ' + self.config.updateInterval;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-					}					
-				   self.fetchMagicseaweedData();
-				}, self.config.updateInterval);
+                url: NOAAWaterTempURL,
+                method: 'GET'
+            }, function(error, response, body) {
 
-		} // end request(function())
-	);//end Magicseaweed request
-	this.MAGICfetcherRunning = false;
-	}, //end Magicseaweed function
+                if (!error && response.statusCode == 200) {
+                    this.NOAAPayload = body;
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Water Temp API RESULT(4): ' + self.name + ': ' + body);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: NOAA Water Temp API RESULT(4): Received';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.sendSocketNotification('NOAA_WATERTEMP', body);
+                } else {
+                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: NOAA Water Temp API ERROR (5):  ' + error;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                }
+                setTimeout(function() {
+                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(WaterTemp): ' + self.config.updateInterval;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.fetchNOAAData();
+                }, self.config.updateInterval);
+            } //end request(function())
+        ); //end request() for Water Temp
+        //NOAA Tide Data
+        //NOAA asks us to send the application name when making API requests
 
-// ------------------ SOCKET CONFIGURATION --------------------------
-	socketNotificationReceived: function (notification, payload) {
-		var self = this;
-		var apiMessage = "";
-		if (notification === 'GET_NOAA') {
-			this.config = payload;
-			//print to console - if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
-			//send message back to console for unified debugging
-			if ( this.config.debug === 1 ) {
-				apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
-				self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-			}
-				if (!this.NOAAfetcherRunning) {
-					this.fetchNOAAData();
-				} else {
-					var self = this;
-					//if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': NOAAfetcherRunning = ' + this.NOAAfetcherRunning);}
-					if ( this.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': NOAAfetcherRunning = ' + this.NOAAfetcherRunning;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-					}
-				}
-		}//end NOAA Socket Config
-		
-		if (notification === 'GET_MAGIC') {
-			this.config = payload;
-			//if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
-			if ( this.config.debug === 1 ) {
-				apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
-				self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-			}
-				if (!this.MAGICfetcherRunning) {
-					this.fetchMagicseaweedData();
-				} else {
-					var self = this;
-					//if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': MAGICfetcherRunning = ' + this.MAGICfetcherRunning);}
-					if ( this.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': MAGICfetcherRunning = ' + this.MAGICfetcherRunning;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-					}
-				} 
-		} //end Magicseaweed Socket config
+        var NOAAtideURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=predictions&application=MMM-Surfer&begin_date=" + todayString + "&end_date=" + tomorrowString + "&datum=MLLW&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=hilo&format=json")
+            //if ( this.config.debug === 1 ) {console.log(moment().format() + " NOAA Tide Data API REQUEST(3): " + this.name  + ": " + NOAAtideURL);}
+        if (this.config.debug === 1) {
+            apiMessage = moment().format() + " HELPER: NOAA Tide Data API REQUEST(3): " + NOAAtideURL;
+            self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+        }
+        request({
+                url: NOAAtideURL,
+                method: 'GET'
+            },
+            function(error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    this.NOAAPayload = body;
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Tide Data API RESULT(4): ' + self.name + ': ' + body);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: NOAA Tide Data API RESULT(4): Received';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.sendSocketNotification('NOAA_TIDE_DATA', body);
+                } else {
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Tide Data API ERROR(4): ' + self.name + ': ' + error);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: NOAA Tide API ERROR (5):  ' + error;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                }
+                setTimeout(function() {
+                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}				
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(Tide): ' + self.config.updateInterval;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.fetchNOAAData();
+                }, self.config.updateInterval);
 
-		if (notification === 'GET_WUNDERGROUND') {
-			this.config = payload;
-				//if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
-				if ( this.config.debug === 1 ) {
-				apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
-				self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-			}
-					if (!this.WufetcherRunnin) {
-						this.fetchWunderground();
-					} else {
-						var self = this;
-						//if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning);}
-					if ( this.config.debug === 1 ) {
-						apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning;
-						self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-					}						
-					} 
-		}//end Wunderground Socket config
-} // end socketNotification
+            } //end request(function())
+        ); //end request() for NOAA Tides
+        this.NOAAfetcherRunning = false;
+    }, // end fetchNOAA function
+
+    fetchMagicseaweedData: function() {
+        var self = this;
+        var apiMessage = "";
+        this.MAGICfetcherRunning = true;
+        //Magicseaweed URL
+
+        var magicseaweedURL = encodeURI(this.config.MagicSeaweedAPIBase + this.config.MagicAPI + this.config.forecastEndpoint + this.config.MagicSeaweedSpotID)
+            //if ( this.config.debug === 1 ) {console.log(moment().format() + " Magicseaweed API REQUEST(3): " + magicseaweedURL);}
+        if (this.config.debug === 1) {
+            apiMessage = moment().format() + " HELPER: Magicseaweed API REQUEST(3): " + magicseaweedURL;
+            self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+        }
+        request({
+                url: magicseaweedURL,
+                method: 'GET'
+            },
+            function(error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    this.magicseaweed = body;
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + " Magicseaweed API RESULT(4): " + self.name + ": +body);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: Magicseaweed API RESULT(4): Received';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.sendSocketNotification('MAGICSEAWEED', body);
+                } else {
+                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' Magicseaweed API ERROR(4): ' + self.name + ': ' + error);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: Magicseaweed API ERROR(4):  ' + error;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                }
+                setTimeout(function() {
+                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in MagicSeaweed module ' + self.config.updateInterval);}
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER: setTimeout called in fetchMagicseaweedData: ' + self.config.updateInterval;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                    self.fetchMagicseaweedData();
+                }, self.config.updateInterval);
+
+            } // end request(function())
+        ); //end Magicseaweed request
+        this.MAGICfetcherRunning = false;
+    }, //end Magicseaweed function
+
+    // ------------------ SOCKET CONFIGURATION --------------------------
+    socketNotificationReceived: function(notification, payload) {
+            var self = this;
+            var apiMessage = "";
+            if (notification === 'GET_NOAA') {
+                this.config = payload;
+                //print to console - if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
+                //send message back to console for unified debugging
+                if (this.config.debug === 1) {
+                    apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
+                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                }
+                if (!this.NOAAfetcherRunning) {
+                    this.fetchNOAAData();
+                } else {
+                    var self = this;
+                    //if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': NOAAfetcherRunning = ' + this.NOAAfetcherRunning);}
+                    if (this.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': NOAAfetcherRunning = ' + this.NOAAfetcherRunning;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    }
+                }
+            } //end NOAA Socket Config
+
+            if (notification === 'GET_MAGIC') {
+                this.config = payload;
+                //if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
+                if (this.config.debug === 1) {
+                    apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
+                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                }
+                if (!this.MAGICfetcherRunning) {
+                    this.fetchMagicseaweedData();
+                } else {
+                    var self = this;
+                    //if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': MAGICfetcherRunning = ' + this.MAGICfetcherRunning);}
+                    if (this.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': MAGICfetcherRunning = ' + this.MAGICfetcherRunning;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    }
+                }
+            } //end Magicseaweed Socket config
+
+            if (notification === 'GET_WUNDERGROUND') {
+                this.config = payload;
+                //if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN) ' + notification + ': Fetching Data (2)');}
+                if (this.config.debug === 1) {
+                    apiMessage = moment().format() + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
+                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                }
+                if (!this.WufetcherRunnin) {
+                    this.fetchWunderground();
+                } else {
+                    var self = this;
+                    //if ( this.config.debug === 1 ) {console.log(moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning);}
+                    if (this.config.debug === 1) {
+                        apiMessage = moment().format() + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    }
+                }
+            } //end Wunderground Socket config
+        } // end socketNotification
 
 }); //end helper module
-
