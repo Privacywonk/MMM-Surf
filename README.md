@@ -58,29 +58,29 @@ To find a PWS ID:
 
 
 ```
-{
-	module: 'MMM-Surf',
-	debug: "0",
-	position: 'top_left',
-	config: {
-		MagicSeaweedSpotID: '',	//REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
-		MagicAPI: '', 		//REQUIRED: magicseaweed API Key
-		station_id: '', 	//REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
-		Wuapikey: "", 		//REQUIRED: Wunderground API 
-		WuPWS: "", 		//REQUIRED: Wunderground Location, e.g. "pws:KCASANFR99" or "CA/San_Francisco" or "60290" or "PHL" 
-		noaatz: 'lst_ldt', 	//NOAA time zone requests. Local Standard Time / Daylight time.
-		hourly: "1",
-		fctext: '1',
-		fcdaycount: "4",
-		fcdaystart: "0",
-		hourlyinterval: "3",
-		hourlycount: "2",
-		alerttime: 10000,
-		alerttruncatestring: "english:",
-		roundTmpDecs: 1,
-		UseCardinals: 0,
-		layout: "horizontal"
-	}
+module: "MMM-Surf",
+debug: "0",
+position: "top_left",
+config: {
+        MagicSeaweedSpotID: "",         //REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
+        MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
+        MagicAPI: "",                   //REQUIRED: magicseaweed API Key
+        station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
+        Wuapikey: "",                   //REQUIRED: Wunderground API
+        WuPWS: "",                      //REQUIRED: Wunderground Location, e.g. "pws:KCASANFR99" or "CA/San_Francisco" or "60290" or "PHL"
+        noaatz: "lst_ldt",              //NOAA time zone requests. Local Standard Time / Daylight time.
+        hourly: "1",
+        fctext: "1",
+        fcdaycount: "4",
+        fcdaystart: "0",
+        hourlyinterval: "3",
+        hourlycount: "2",
+        alerttime: "10000",
+        alerttruncatestring: "english:",
+        roundTmpDecs: "1",
+        UseCardinals: "0",
+        layout: "horizontal"
+        }
 },
 ```
 
