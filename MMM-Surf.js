@@ -60,7 +60,7 @@ Module.register("MMM-Surf", {
         forecastEndpoint: "/forecast/?spot_id=",
         // NOAA API Configuration
         NOAAapiBase: "https://tidesandcurrents.noaa.gov/api/",
-
+	layout: "horizontal",
         iconTableDay: {
             "chanceflurries": "wi-day-snow-wind",
             "chancerain": "wi-day-showers",
