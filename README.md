@@ -106,6 +106,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Magicseaweed Tech Team 
 * MagicMirror community for inspiring me to make a thing for the first time in many years
 * **Xinh Studio** - *High and Low Tid Icons by Xinh Studio from the Noun Project* - [Xinh Studio](https://thenounproject.com/xinhstudio/)
-* **Erik Flowers** - *Weather Icons Project* - Weather Icons(https://erikflowers.github.io/weather-icons/)
+* **Erik Flowers** - *Weather Icons Project* - [Weather Icons](https://erikflowers.github.io/weather-icons/)
 * **RedNax 67** - *Magic Mirror Wunderground Module that served as layout inspiration and provided some code direction* - [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround)
 
