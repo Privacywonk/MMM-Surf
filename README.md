@@ -64,6 +64,8 @@ position: "top_left",
 config: {
         MagicSeaweedSpotID: "",         //REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
         MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
+        spotSwellHold: [],      	//OPTIONAL: Best swell direction that your spot handles. Accepts multiple cardinal directions, e.g. ["N"] or ["S","SSW","ESE"]
+        spotWind: [],          		//OPTIONAL: Best wind direction for spot. Accepts multiple cardinal directions, e.g. ["N"] or["S","SSW","ESE"]
         MagicAPI: "",                   //REQUIRED: magicseaweed API Key
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
         Wuapikey: "",                   //REQUIRED: Wunderground API

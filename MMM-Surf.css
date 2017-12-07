@@ -6,6 +6,11 @@
   -webkit-transform: translate(0, -3px); /* Safari */
   transform: translate(0, -3px);
 } 
+.MMM-Surf .swellgreen {
+  color: #00FF55;
+}
+
+
 .MMM-Surf .day {
   padding-left: 0;
 #  padding-right: 10px;
