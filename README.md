@@ -4,8 +4,7 @@ MMM-Surf is a Magic Mirror module that will display weather, tides, water temp, 
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed.
 
-![image](https://user-images.githubusercontent.com/9799911/33578067-3ad71328-d913-11e7-9dd7-16fb05e8f91c.png)
-
+![image](https://user-images.githubusercontent.com/9799911/33715450-84683e04-db20-11e7-8698-4d69221b8314.png)
 
 ### Prerequisites
 
