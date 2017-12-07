@@ -18,6 +18,8 @@ Module.register("MMM-Surf", {
     defaults: {
         MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
         MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
+	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" 
+	spotWind: [],		//best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
         MagicAPI: "",
         debug: 0,
         Wuapikey: "",
@@ -611,8 +613,20 @@ Module.register("MMM-Surf", {
                     swellInfo.appendChild(swellInfoCell);
 
                     swellInfoCell = document.createElement("i");
-                    //Note: Important that swell is going TOWARD a direction not blowing FROM a direction like wind. 
-                    swellInfoCell.className = "wi wi-wind towards-" + Math.round(this.magicforecast[f].swellDirection) + "-deg";
+
+	            for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
+                        Log.info("Swell Compass Direction: "+ this.magicforecast[f].swellCompassDirection);
+                        Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
+
+			if (this.config.spotSwellHold[i] === this.magicforecast[f].swellCompassDirection) {
+				//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward. 
+				//The arrow displayed will have the small point facing the origin of the swell
+				swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast[f].swellDirection) + "-deg swellgreen";
+				break;
+			} else{
+				swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast[f].swellDirection) + "-deg";
+			}
+		    } // end swell colorization loop	
 
                     swellInfo.appendChild(swellInfoCell);
                     row_pop.appendChild(swellInfo);
@@ -624,8 +638,22 @@ Module.register("MMM-Surf", {
                     windInfoCell.className = "hour";
                     windInfo.appendChild(windInfoCell);
 
+
                     windInfoCell = document.createElement("i");
-                    windInfoCell.className = "wi wi-wind " + this.magicforecast[f].windDirection;
+                    for (i = 0, count = this.config.spotWind.length; i < count; i++) {
+			Log.info("WIND: " + this.magicforecast[f].windCompassDirection + " / " + this.config.spotWind[i]);
+
+                        if (this.config.spotWind[i] === this.magicforecast[f].windCompassDirection) {
+				//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
+				//The arrow displayed will have the small point facing the origin of the wind
+                                windInfoCell.className = "wi wi-wind " + this.magicforecast[f].windDirection + " swellgreen";
+				break;
+                        } else {
+                               	windInfoCell.className = "wi wi-wind " + this.magicforecast[f].windDirection;
+                        }
+                    } // end wind colorization loop
+
+
                     windInfo.appendChild(windInfoCell);
 
                     windInfoCell = document.createElement("i");
@@ -705,7 +733,19 @@ Module.register("MMM-Surf", {
                     swellInfoCell.className = "hour";
                     swellInfo.appendChild(swellInfoCell);
                     swellInfoCell = document.createElement("i");
-                    swellInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].swellDirection;
+                    for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
+                        Log.info("Swell Compass Direction: "+ this.magicforecastDaily[f].swellCompassDirection);
+                        Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
+
+                        if (this.config.spotSwellHold[i] === this.magicforecastDaily[f].swellCompassDirection) {
+                                //Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward.
+                                //The arrow displayed will have the small point facing the origin of the swell
+                                swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg swellgreen";
+                                break;
+                        } else{
+                                swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg";
+                        }
+                    } // end swell colorization loop
                     swellInfo.appendChild(swellInfoCell);
                     row_pop.appendChild(swellInfo);
                     //wind direction
@@ -716,7 +756,19 @@ Module.register("MMM-Surf", {
                     windInfo.appendChild(windInfoCell);
 
                     windInfoCell = document.createElement("i");
-                    windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection;
+
+                    for (i = 0, count = this.config.spotWind.length; i < count; i++) {
+                        Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
+
+                        if (this.config.spotWind[i] === this.magicforecastDaily[f].windCompassDirection) {
+                                //Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
+                                //The arrow displayed will have the small point facing the origin of the wind
+                                windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellgreen";
+                                break;
+                        } else {
+                                windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection;
+                        }
+                    } // end wind colorization loop
                     windInfo.appendChild(windInfoCell);
 
                     windInfoCell = document.createElement("i");
@@ -1005,12 +1057,12 @@ Module.register("MMM-Surf", {
             //set IGNORE flag for forecast times we don't care about (1am, 7pm, 10pm)
             //Focusing on surfable hours...dawn patrol through sunset. 
             //TODO: Make config item to allow user customization...?
-            var msHours = moment.unix(data[i].localTimestamp).format('HH');
-            if (msHours == 01 ||
-                msHours == 19 ||
-                msHours == 22) {
-                data[i].localTimestamp = "IGNORE";
-            }
+            //var msHours = moment.unix(data[i].localTimestamp).format('HH');
+            //if (msHours == 01 ||
+            //    msHours == 19 ||
+            //    msHours == 22) {
+            //    data[i].localTimestamp = "IGNORE";
+            //}
             //set IGNORE flag for forecast data in the past...
             //TODO: refine to include most recent forecast in the past need to mimic the tide data... 
             if (moment.unix(data[i].localTimestamp) < now) {
@@ -1069,9 +1121,11 @@ Module.register("MMM-Surf", {
                 this.swellMaxBreakingHeight = data[i].swell.maxBreakingHeight;
                 this.swellMinBreakingheight = data[i].swell.minBreakingHeight;
                 this.swellDirection = data[i].swell.components.primary.direction;
+		this.swellCompassDirection = data[i].swell.components.primary.compassDirection;
                 this.swellHeight = data[i].swell.components.primary.height;
                 this.swellPeriod = data[i].swell.components.primary.period;
                 this.winddirection = this.deg2Cardinal(data[i].wind.direction);
+		this.windCompassDirection = data[i].wind.compassDirection; 
                 this.windgusts = data[i].wind.gusts;
                 this.windspeed = data[i].wind.speed;
                 this.windunit = data[i].wind.unit;
@@ -1090,9 +1144,11 @@ Module.register("MMM-Surf", {
                         maxHeight: this.swellMaxBreakingHeight,
                         minHeight: this.swellMinBreakingheight,
                         swellDirection: this.swellDirection,
+			swellCompassDirection: this.swellCompassDirection,
                         swellHeight: this.swellHeight,
                         swellPeriod: this.swellPeriod,
                         windDirection: this.winddirection,
+			windCompassDirection: this.windCompassDirection,
                         windGusts: this.windgusts,
                         windSpeed: this.windspeed,
                         windUnit: this.windunit,
@@ -1113,9 +1169,11 @@ Module.register("MMM-Surf", {
                         maxHeight: this.swellMaxBreakingHeight,
                         minHeight: this.swellMinBreakingheight,
                         swellDirection: this.swellDirection,
+			swellCompassDirection: this.swellCompassDirection,
                         swellHeight: this.swellHeight,
                         swellPeriod: this.swellPeriod,
                         windDirection: this.winddirection,
+			windCompassDirection: this.windCompassDirection,
                         windGusts: this.windgusts,
                         windSpeed: this.windspeed,
                         windUnit: this.windunit,

@@ -4,8 +4,7 @@ MMM-Surf is a Magic Mirror module that will display weather, tides, water temp, 
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed.
 
-![image](https://user-images.githubusercontent.com/9799911/33578067-3ad71328-d913-11e7-9dd7-16fb05e8f91c.png)
-
+![image](https://user-images.githubusercontent.com/9799911/33715450-84683e04-db20-11e7-8698-4d69221b8314.png)
 
 ### Prerequisites
 
@@ -64,6 +63,8 @@ position: "top_left",
 config: {
         MagicSeaweedSpotID: "",         //REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
         MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
+        spotSwellHold: [],      	//OPTIONAL: Best swell direction that your spot handles. Accepts multiple cardinal directions, e.g. ["N"] or ["S","SSW","ESE"]
+        spotWind: [],          		//OPTIONAL: Best wind direction for spot. Accepts multiple cardinal directions, e.g. ["N"] or["S","SSW","ESE"]
         MagicAPI: "",                   //REQUIRED: magicseaweed API Key
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
         Wuapikey: "",                   //REQUIRED: Wunderground API
@@ -84,9 +85,6 @@ config: {
 },
 ```
 
-## Forked from 
-
-* [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround) 
 
 ## Versioning
 
@@ -96,12 +94,18 @@ For the versions available, see the [tags on this repository](https://github.com
 
 * **me** - *Initial work* - [PrivacyWonk](https://github.com/PrivacyWonk)
 
+## Contributors
+* **[CaptainJimmy](https://github.com/CaptainJimmy)** - Code optimization and beautification.  
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the Attribution 4.0 International (CC BY 4.0) license  - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
 * Magicseaweed Tech Team 
 * MagicMirror community for inspiring me to make a thing for the first time in many years
+* **Xinh Studio** - *High and Low Tid Icons by Xinh Studio from the Noun Project* - [Xinh Studio](https://thenounproject.com/xinhstudio/)
+* **Erik Flowers** - *Weather Icons Project* - [Weather Icons](https://erikflowers.github.io/weather-icons/)
+* **RedNax 67** - *Magic Mirror Wunderground Module that served as layout inspiration and provided some code direction* - [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround)
 
