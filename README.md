@@ -86,9 +86,6 @@ config: {
 },
 ```
 
-## Forked from 
-
-* [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround) 
 
 ## Versioning
 
@@ -98,6 +95,9 @@ For the versions available, see the [tags on this repository](https://github.com
 
 * **me** - *Initial work* - [PrivacyWonk](https://github.com/PrivacyWonk)
 
+## Contributors
+* **[CaptainJimmy](https://github.com/PrivacyWonk)** - *Cleaned up my @PrivacyWonk's kindergarten codes.  
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
@@ -106,4 +106,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * Magicseaweed Tech Team 
 * MagicMirror community for inspiring me to make a thing for the first time in many years
+* **Xinh Studio** - *High and Low Tid Icons by Xinh Studio from the Noun Project* - [Xinh Studio](https://thenounproject.com/xinhstudio/)
+* **Erik Flowers** - *Weather Icons Project* - Weather Icons(https://erikflowers.github.io/weather-icons/)
+* **RedNax 67** - *Magic Mirror Wunderground Module that served as layout inspiration and provided some code direction* - [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround)
 
