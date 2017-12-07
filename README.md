@@ -95,7 +95,7 @@ For the versions available, see the [tags on this repository](https://github.com
 * **me** - *Initial work* - [PrivacyWonk](https://github.com/PrivacyWonk)
 
 ## Contributors
-* **[CaptainJimmy](https://github.com/PrivacyWonk)** - *Cleaned up my @PrivacyWonk's kindergarten codes.  
+* **[CaptainJimmy](https://github.com/CaptainJimmy)** - Code optimization and beautification.  
 
 ## License
 
