@@ -99,7 +99,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the Attribution 4.0 International (CC BY 4.0) license  - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
