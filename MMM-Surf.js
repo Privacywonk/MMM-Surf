@@ -615,8 +615,9 @@ Module.register("MMM-Surf", {
                     swellInfoCell = document.createElement("i");
 
 	            for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
-                        Log.info("Swell Compass Direction: "+ this.magicforecast[f].swellCompassDirection);
-                        Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
+                        if (this.config.debug === 1) { 
+				Log.info("SWELL (forecast/spothold): "+ this.magicforecast[f].swellCompassDirection+"/"+this.config.spotSwellHold[i]);
+			}
 
 			if (this.config.spotSwellHold[i] === this.magicforecast[f].swellCompassDirection) {
 				//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward. 
@@ -629,7 +630,14 @@ Module.register("MMM-Surf", {
 		    } // end swell colorization loop	
 
                     swellInfo.appendChild(swellInfoCell);
+
+                    swellInfoCell = document.createElement("i");
+                    swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast[f].swellCompassDirection;
+                    swellInfoCell.className = "smaller";
+	       	    swellInfo.appendChild(swellInfoCell);
+
                     row_pop.appendChild(swellInfo);
+
 
                     //wind direction
                     windInfo = document.createElement("td");
@@ -641,7 +649,7 @@ Module.register("MMM-Surf", {
 
                     windInfoCell = document.createElement("i");
                     for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-			Log.info("WIND: " + this.magicforecast[f].windCompassDirection + " / " + this.config.spotWind[i]);
+			if (this.config.debug === 1) { Log.info("WIND: " + this.magicforecast[f].windCompassDirection + " / " + this.config.spotWind[i]);}
 
                         if (this.config.spotWind[i] === this.magicforecast[f].windCompassDirection) {
 				//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
@@ -657,7 +665,7 @@ Module.register("MMM-Surf", {
                     windInfo.appendChild(windInfoCell);
 
                     windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast[f].windSpeed + "/" + this.magicforecast[f].windGusts + "mph";
+		windInfoCell.innerHTML = "&nbsp;" + this.magicforecast[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast[f].windGusts + "mph";
                     windInfoCell.className = "smaller";
                     windInfo.appendChild(windInfoCell);
                     row_wind.appendChild(windInfo);
@@ -747,6 +755,12 @@ Module.register("MMM-Surf", {
                         }
                     } // end swell colorization loop
                     swellInfo.appendChild(swellInfoCell);
+
+                    swellInfoCell = document.createElement("i");
+                    swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecastDaily[f].swellCompassDirection;
+                    swellInfoCell.className = "smaller";
+                    swellInfo.appendChild(swellInfoCell);
+
                     row_pop.appendChild(swellInfo);
                     //wind direction
                     windInfo = document.createElement("td");
@@ -772,7 +786,8 @@ Module.register("MMM-Surf", {
                     windInfo.appendChild(windInfoCell);
 
                     windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "<br>&nbsp;&nbsp;" + this.magicforecastDaily[f].windSpeed + "/" + this.magicforecastDaily[f].windGusts + "mph";
+			windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecastDaily[f].windGusts + "mph";
+
                     windInfoCell.className = "smaller";
                     windInfo.appendChild(windInfoCell);
                     row_wind.appendChild(windInfo);
