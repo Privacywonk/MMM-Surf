@@ -1,8 +1,8 @@
 # MMM-Surf
 
-MMM-Surf is a Magic Mirror module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). 
+MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA).
 
-The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed.
+The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
 ![image](https://user-images.githubusercontent.com/9799911/33796393-7a7d06d4-dcc1-11e7-9396-d4a348669fbc.png)
 
@@ -65,6 +65,8 @@ config: {
         MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
         spotSwellHold: [],      	//OPTIONAL: Best swell direction that your spot handles. Accepts multiple cardinal directions, e.g. ["N"] or ["S","SSW","ESE"]
         spotWind: [],          		//OPTIONAL: Best wind direction for spot. Accepts multiple cardinal directions, e.g. ["N"] or["S","SSW","ESE"]
+	spotSwellMin: "",       	//OPTIONAL: Define minimum swell size that works at the spot, e.g. "3"
+        spotSwellMax: "",       	//OPTIONAL: Define maximum swell size that works at the spot, e.g. "10"
         MagicAPI: "",                   //REQUIRED: magicseaweed API Key
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
         Wuapikey: "",                   //REQUIRED: Wunderground API

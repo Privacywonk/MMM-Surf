@@ -20,6 +20,8 @@ Module.register("MMM-Surf", {
         MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
 	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" 
 	spotWind: [],		//best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
+	spotSwellMin: "",	//minimum swell size that works at the spot
+	spotSwellMax: "",	//maximum swell size that works at the spot
         MagicAPI: "",
         debug: 0,
         Wuapikey: "",
@@ -302,13 +304,23 @@ Module.register("MMM-Surf", {
 		row_watersitrep.className = "pop";
 
 		// Display Water Temperature
-		var WaterIcon = document.createElement("td");
-		WaterIcon.className = "wi";
-		row_watersitrep.appendChild(WaterIcon);
+                //wetsuit eval
+                gear = "";
+                WaterEval = Math.round(WaterTemp);
+                if (WaterEval >= 73) {gear = "Boardies!";}
+                if (WaterEval >= 69 && WaterEval <= 72) { gear = "0.5 mm - 2/1 mm";}
+                if (WaterEval >= 62 && WaterEval <= 68) { gear = "2 mm - 3/2 mm";}
+                if (WaterEval >= 58 && WaterEval <= 61) { gear = "3/2 mm - 4/3 mm";}
+                if (WaterEval >= 52 && WaterEval <= 57) { gear = "4/3 mm - 5/4/3 mm";}
+                if (WaterEval >= 43 && WaterEval <= 51) { gear = "5/4 mm - 5/4/3 mm";}
+                if (WaterEval <= 42) {gear = "6/5 mm - 6/5/4 mm";}
+		
 
 		var WaterTxt = document.createElement("td");
-		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg;"; //round to nearest whole because 50.2 degrees doesn't make any fucking difference
-		WaterTxt.className = "vcen left";
+		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make any fucking difference
+		WaterTxt.className = "water";
+
+
 		row_watersitrep.appendChild(WaterTxt);
 
 		//Display Tide Data
@@ -383,7 +395,27 @@ Module.register("MMM-Surf", {
 				row_forecastRating.appendChild(magicseaweedStarRating);
 				//swell height and period
 				swellConditionsCell = document.createElement("td");
-				swellConditionsCell.innerHTML = this.magicforecast24hrs[f].swellHeight + "' @ " + this.magicforecast24hrs[f].swellPeriod + "s"
+                                /* Evaluate periodicity of swell and pop an indicator color
+                                *  red = not surfable
+                                *  orange = surfable but sloppy
+                                *  green = go go go
+                                *  source: https://magicseaweed.com/help/forecast-table/wave-period-overview
+				*  Evaluate wave height for spot from config. If between Min and Max, pop green
+                                */
+				if (this.magicforecastDaily[f].swellHeight >= this.config.spotSwellMin && this.magicforecastDaily[f].swellHeight <= this.config.spotSwellMax) {
+					swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellHeight +"'</span> @ "; }
+				else {
+					swellHeightRender = this.magicforecastDaily[f].swellHeight + "' @ ";}
+		
+				if (this.magicforecastDaily[f].swellPeriod >= 0 && this.magicforecastDaily[f].swellPeriod <= 6)
+					{swellPeriodRender = "<span class=\"swellred\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+		
+				if (this.magicforecastDaily[f].swellPeriod >= 7 && this.magicforecastDaily[f].swellPeriod <= 9)
+					{swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+		
+				if (this.magicforecastDaily[f].swellPeriod >= 10)
+					{swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+				swellConditionsCell.innerHTML = swellHeightRender + swellPeriodRender;
 				swellConditionsCell.className = "hour";
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
@@ -508,7 +540,27 @@ Module.register("MMM-Surf", {
 				row_forecastRating.appendChild(magicseaweedStarRating);
 				//swell height and period
 				swellConditionsCell = document.createElement("td");
-				swellConditionsCell.innerHTML = this.magicforecastDaily[f].swellHeight + "' @ " + this.magicforecastDaily[f].swellPeriod + "s"
+                                /* Evaluate periodicity of swell and pop an indicator color
+                                *  red = not surfable
+                                *  orange = surfable but sloppy
+                                *  green = go go go
+                                *  source: https://magicseaweed.com/help/forecast-table/wave-period-overview
+                                *  Evaluate wave height for spot from config. If between Min and Max, pop green
+                                */
+                                if (this.magicforecastDaily[f].swellHeight >= this.config.spotSwellMin && this.magicforecastDaily[f].swellHeight <= this.config.spotSwellMax) {
+                                        swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellHeight +"'</span> @ "; }
+                                else {
+                                        swellHeightRender = this.magicforecastDaily[f].swellHeight + "' @ ";}
+
+                                if (this.magicforecastDaily[f].swellPeriod >= 0 && this.magicforecastDaily[f].swellPeriod <= 6)
+                                        {swellPeriodRender = "<span class=\"swellred\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+
+                                if (this.magicforecastDaily[f].swellPeriod >= 7 && this.magicforecastDaily[f].swellPeriod <= 9)
+                                        {swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+
+                                if (this.magicforecastDaily[f].swellPeriod >= 10)
+                                        {swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+                                swellConditionsCell.innerHTML = swellHeightRender + swellPeriodRender;
 				swellConditionsCell.className = "hour";
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
