@@ -98,7 +98,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 ## Contributors
 * **[CaptainJimmy](https://github.com/CaptainJimmy)** - Code optimization and beautification.  
-* **[sh3rp] (https://github.com/sh3rp)** - Education and pointers around the process for identifying the best forecast for each day
+* **[sh3rp](https://github.com/sh3rp)** - Education and pointers around the process for identifying the best forecast for each day
 ## License
 
 This project is licensed under the Attribution 4.0 International (CC BY 4.0) license  - see the [LICENSE.md](LICENSE.md) file for details
