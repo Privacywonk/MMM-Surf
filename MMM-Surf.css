@@ -6,8 +6,24 @@
   -webkit-transform: translate(0, -3px); /* Safari */
   transform: translate(0, -3px);
 } 
+.MMM-Surf .water {
+  font-size: 100%;
+  line-height: 15px;
+  display: inline-block;
+  -ms-transform: translate(0, -3px); /* IE 9 */
+  -webkit-transform: translate(0, -3px); /* Safari */
+  transform: translate(0, -3px);
+}
 .MMM-Surf .swellgreen {
   color: #00FF55;
+}
+
+.MMM-Surf .swellred {
+  color: #FF0055;
+}
+
+.MMM-Surf .swellorange {
+  color: #FF5500;
 }
 
 
@@ -36,7 +52,7 @@
 #  padding-right: 0;
 }
 
-.MMM-Surf .forecastText {
+.MMM-Surf .spotName {
 # padding-left: 10px;
 #  padding-right: 0;
 #  word-wrap: break-word;

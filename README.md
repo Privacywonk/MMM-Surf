@@ -1,10 +1,10 @@
 # MMM-Surf
 
-MMM-Surf is a Magic Mirror module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). 
+MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA).
 
-The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed.
+The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
-![image](https://user-images.githubusercontent.com/9799911/33715450-84683e04-db20-11e7-8698-4d69221b8314.png)
+![image](https://user-images.githubusercontent.com/9799911/34655229-3b42feae-f3d4-11e7-85b6-e49b1e0b5e78.PNG)
 
 ### Prerequisites
 
@@ -65,6 +65,8 @@ config: {
         MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
         spotSwellHold: [],      	//OPTIONAL: Best swell direction that your spot handles. Accepts multiple cardinal directions, e.g. ["N"] or ["S","SSW","ESE"]
         spotWind: [],          		//OPTIONAL: Best wind direction for spot. Accepts multiple cardinal directions, e.g. ["N"] or["S","SSW","ESE"]
+	spotSwellMin: "",       	//OPTIONAL: Define minimum swell size that works at the spot, e.g. "3"
+        spotSwellMax: "",       	//OPTIONAL: Define maximum swell size that works at the spot, e.g. "10"
         MagicAPI: "",                   //REQUIRED: magicseaweed API Key
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
         Wuapikey: "",                   //REQUIRED: Wunderground API
@@ -96,7 +98,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 ## Contributors
 * **[CaptainJimmy](https://github.com/CaptainJimmy)** - Code optimization and beautification.  
-
+* **[sh3rp] (https://github.com/sh3rp)** - Education and pointers around the process for identifying the best forecast for each day
 ## License
 
 This project is licensed under the Attribution 4.0 International (CC BY 4.0) license  - see the [LICENSE.md](LICENSE.md) file for details

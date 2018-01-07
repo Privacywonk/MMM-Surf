@@ -20,14 +20,14 @@ Module.register("MMM-Surf", {
         MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
 	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" 
 	spotWind: [],		//best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
+	spotSwellMin: "",	//minimum swell size that works at the spot
+	spotSwellMax: "",	//maximum swell size that works at the spot
         MagicAPI: "",
         debug: 0,
         Wuapikey: "",
         WuPWS: "",
         station_id: "", //Numeric station ID from NOAA
         noaatz: "", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
-        currentweather: 1,
-        coloricon: false,
         units: config.units,
         windunits: "bft", // choose from mph, bft
         updateInterval: 3600000, //1 Hour (60 minutes) in miliseconds  -  Hardcoded as we don't need to hammer this API.
@@ -37,22 +37,8 @@ Module.register("MMM-Surf", {
         showWindDirection: true,
         fade: true,
         fadePoint: 0.25, // Start on 1/4th of the list.
-        tz: "",
-        fcdaycount: "5",
-        fcdaystart: "0",
-        layout: "horizontal",
-        daily: "1",
-        hourly: "0",
-        hourlyinterval: "3",
-        hourlycount: "2",
-        fctext: "1",
-        alerttime: 5000,
         roundTmpDecs: 1,
-        UseCardinals: 0,
-        sysstat: 0,
-        scaletxt: 1,
         iconset: "VCloudsWeatherIcons",
-        enableCompliments: 0,
         retryDelay: 2500,
         //Wunderground API Base
         WuapiBase: "http://api.wunderground.com/api/",
@@ -144,12 +130,12 @@ Module.register("MMM-Surf", {
         };
     },
 
-    // Define required scripts.
+    // Add moment.js functionality.
     getScripts: function() {
         return ["moment.js"];
     },
 
-    // Define required scripts.
+    // Import CSS files.
     getStyles: function() {
         return ["weather-icons.css", "weather-icons-wind.css", "MMM-Surf.css"];
     },
@@ -197,8 +183,6 @@ Module.register("MMM-Surf", {
         var forecast;
         var iconCell;
         var icon;
-        var maxTempCell;
-        var minTempCell;
         var popCell;
         var mmCell;
         var hourCell;
@@ -225,348 +209,158 @@ Module.register("MMM-Surf", {
             return wrapper;
         }
 
-        if (this.config.currentweather === 1) {
-            var small = document.createElement("div");
-            small.className = "normal medium";
+		//Build CURRENT WEATHER row
+		var small = document.createElement("div");
+		small.className = "normal medium";
 
-            var spacer = document.createElement("span");
-            spacer.innerHTML = "&nbsp;";
+		var spacer = document.createElement("span");
+		spacer.innerHTML = "&nbsp;";
 
-            var table_sitrep = document.createElement("table");
+		var table_sitrep = document.createElement("table");
 
-            var row_sitrep = document.createElement("tr");
-            var spot_row = document.createElement("tr");
+		var row_sitrep = document.createElement("tr");
+		var spot_row = document.createElement("tr");
 
-            if (this.config.MagicSeaweedSpotName != "") {
-                var row = document.createElement("tr");
-                var spotTextCell = document.createElement("td");
-                //display spot name from config
-                spotTextCell.className = "forecastText";
-                spotTextCell.setAttribute("colSpan", "10");
-                //spotTextCell.innerHTML = this.config.MagicSeaweedSpotName + "&nbsp; <img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
-                spotTextCell.innerHTML = this.config.MagicSeaweedSpotName;
+		if (this.config.MagicSeaweedSpotName != "") {
+			var row = document.createElement("tr");
+			var spotTextCell = document.createElement("td");
+			//display spot name from config
+			spotTextCell.className = "spotName";
+			spotTextCell.setAttribute("colSpan", "10");
+			//spotTextCell.innerHTML = this.config.MagicSeaweedSpotName + "&nbsp; <img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
+			spotTextCell.innerHTML = this.config.MagicSeaweedSpotName;
 
-                spot_row.appendChild(spotTextCell);
-                table_sitrep.appendChild(spot_row);
-            }
+			spot_row.appendChild(spotTextCell);
+			table_sitrep.appendChild(spot_row);
+		}
 
+		var weatherIcon = document.createElement("td");
+		weatherIcon.className = "wi " + this.weatherType;
+		row_sitrep.appendChild(weatherIcon);
 
-            var weatherIcon = document.createElement("td");
-            if (this.config.coloricon) {
-                weatherIcon.innerHTML = this.weatherTypeTxt;
-            } else {
-                weatherIcon.className = "wi " + this.weatherType;
-            }
-            row_sitrep.appendChild(weatherIcon);
-            var temperature = document.createElement("td");
-            temperature.className = "bright";
-            temperature.innerHTML = " " + this.temperature + "&deg;";
-            row_sitrep.appendChild(temperature);
+		var temperature = document.createElement("td");
+		temperature.className = "bright";
+		temperature.innerHTML = " " + this.temperature + "&deg;";
+		row_sitrep.appendChild(temperature);
 
+		var windIcon = document.createElement("td");
+		if (this.config.windunits == "mph") {
+			windIcon.innerHTML = this.windSpeedMph + "<sub>mph</sub>";
+		} else {
+			windIcon.className = "wi " + this.windSpeed;
+		}
+		row_sitrep.appendChild(windIcon);
+		row_sitrep.className = "pop";
 
-            var windIcon = document.createElement("td");
-            if (this.config.windunits == "mph") {
-                windIcon.innerHTML = this.windSpeedMph + "<sub>mph</sub>";
-            } else {
-                windIcon.className = "wi " + this.windSpeed;
-            }
-            row_sitrep.appendChild(windIcon);
-            row_sitrep.className = "pop";
+		var windDirectionIcon = document.createElement("td");
+		windDirectionIcon.className = "wi wi-wind " + this.windDirection;
+		windDirectionIcon.innerHTML = "&nbsp;";
 
-            var windDirectionIcon = document.createElement("td");
-            if (this.config.UseCardinals === 0) {
-                windDirectionIcon.className = "wi wi-wind " + this.windDirection;
-                windDirectionIcon.innerHTML = "&nbsp;";
-            } else {
-                windDirectionIcon.innerHTML = this.windDirectionTxt;
-            }
-            row_sitrep.appendChild(windDirectionIcon);
+		row_sitrep.appendChild(windDirectionIcon);
 
-            var HumidityIcon = document.createElement("td");
-            HumidityIcon.className = "wi wi-humidity lpad";
-            row_sitrep.appendChild(HumidityIcon);
+		var HumidityIcon = document.createElement("td");
+		HumidityIcon.className = "wi wi-humidity lpad";
+		row_sitrep.appendChild(HumidityIcon);
 
-            var HumidityTxt = document.createElement("td");
-            HumidityTxt.innerHTML = this.Humidity + "&nbsp;";
-            HumidityTxt.className = "vcen left";
-            row_sitrep.appendChild(HumidityTxt);
+		var HumidityTxt = document.createElement("td");
+		HumidityTxt.innerHTML = this.Humidity + "&nbsp;";
+		HumidityTxt.className = "vcen left";
+		row_sitrep.appendChild(HumidityTxt);
 
-            var sunriseSunsetIcon = document.createElement("td");
-            sunriseSunsetIcon.className = "wi " + this.sunriseSunsetIcon;
-            row_sitrep.appendChild(sunriseSunsetIcon);
+		var sunriseSunsetIcon = document.createElement("td");
+		sunriseSunsetIcon.className = "wi " + this.sunriseSunsetIcon;
+		row_sitrep.appendChild(sunriseSunsetIcon);
 
-            var sunriseSunsetTxt = document.createElement("td");
-            sunriseSunsetTxt.innerHTML = this.sunriseSunsetTime;
-            sunriseSunsetTxt.className = "vcen left";
-            row_sitrep.appendChild(sunriseSunsetTxt);
+		var sunriseSunsetTxt = document.createElement("td");
+		sunriseSunsetTxt.innerHTML = this.sunriseSunsetTime;
+		sunriseSunsetTxt.className = "vcen left";
+		row_sitrep.appendChild(sunriseSunsetTxt);
 
-            var moonPhaseIcon = document.createElement("td");
-            moonPhaseIcon.innerHTML = this.moonPhaseIcon;
-            row_sitrep.appendChild(moonPhaseIcon);
+		var moonPhaseIcon = document.createElement("td");
+		moonPhaseIcon.innerHTML = this.moonPhaseIcon;
+		row_sitrep.appendChild(moonPhaseIcon);
 
-            //close current weather conditions row (top)
-            table_sitrep.appendChild(row_sitrep);
-            small.appendChild(table_sitrep);
+		//close current weather conditions row (top)
+		table_sitrep.appendChild(row_sitrep);
+		small.appendChild(table_sitrep);
 
-            // New section for water
-            var small2 = document.createElement("div");
-            small2.className = "normal medium test";
+		// CURRENT WATER CONDITIONS
+		var small2 = document.createElement("div");
+		small2.className = "normal medium test";
 
-            var spacer = document.createElement("span");
-            spacer.innerHTML = "&nbsp;";
+		var spacer = document.createElement("span");
+		spacer.innerHTML = "&nbsp;";
 
-            //add divider
-            var divider = document.createElement("hr");
-            divider.className = "hrDivider";
-            small2.appendChild(divider);
+		//add divider
+		var divider = document.createElement("hr");
+		divider.className = "hrDivider";
+		small2.appendChild(divider);
 
-            // Current Water Conditions (second row)
-            var table_watersitrep = document.createElement("table");
-            var row_watersitrep = document.createElement("tr");
-            row_watersitrep.className = "pop";
+		// Current Water Conditions (second row)
+		var table_watersitrep = document.createElement("table");
+		var row_watersitrep = document.createElement("tr");
+		row_watersitrep.className = "pop";
 
-            // Display Water Temperature
-            var WaterIcon = document.createElement("td");
-            WaterIcon.className = "wi";
-            row_watersitrep.appendChild(WaterIcon);
+		/* Display Water Temperature & Gear Choices
+		 * wetsuit/gear choice evals water temp and makes a recommendation
+		 * Not a science...weather conditions will influence your choice
+		 */
+                gear = "";
+                WaterEval = Math.round(WaterTemp);
+                if (WaterEval >= 73) {gear = "Boardies!";}
+                if (WaterEval >= 65 && WaterEval <= 72) { gear = "2mm";}
+                if (WaterEval >= 59 && WaterEval <= 64) { gear = "3/2";}
+                if (WaterEval >= 54 && WaterEval <= 58) { gear = "4/3";}
+                if (WaterEval >= 47 && WaterEval <= 53) { gear = "5/4/3";}
+                if (WaterEval <= 46) {gear = "6/5/4";}
+		
 
-            var WaterTxt = document.createElement("td");
-            WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg;"; //round to nearest whole because 50.2 degrees doesn't make any fucking difference
-            WaterTxt.className = "vcen left";
-            row_watersitrep.appendChild(WaterTxt);
-
-            //Display Tide Data
-            var TideIcon = document.createElement("td");
-            TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + ".png" + "'>";
-            TideIcon.className = "wi";
-            row_watersitrep.appendChild(TideIcon);
-
-            var TideTxt = document.createElement("td");
-            if (this.TideTypeCurrent == "Low") {
-                TideTxt.innerHTML = this.TideHeightCurrent + "' @ " + moment(this.TideTimeCurrent).format('LT') + " <br> " + this.DeltaPerc + "% out";
-            } else {
-                TideTxt.innerHTML = this.TideHeightCurrent + "'@ " + moment(this.TideTimeCurrent).format('LT') + " <br> " + this.DeltaPerc + "% in";
-            }
-            TideTxt.className = "small vcen left";
-            row_watersitrep.appendChild(TideTxt);
-
-            //Display Next Tide Data and Time
-            var nextTideIcon = document.createElement("td");
-            nextTideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeNext + ".png" + "'>";
-            nextTideIcon.className = "wi";
-            row_watersitrep.appendChild(nextTideIcon);
-
-            var nextTideTxt = document.createElement("td");
-            nextTideTxt.innerHTML = this.TideHeightNext + "' @ " + moment(this.TideTimeNext).format('LT');
-            nextTideTxt.className = "small vcen left";
-            row_watersitrep.appendChild(nextTideTxt);
-
-            //Close Water Conditions Row in table (second row)
-            table_watersitrep.appendChild(row_watersitrep);
-            small2.appendChild(table_watersitrep);
+		var WaterTxt = document.createElement("td");
+		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make a  difference
+		WaterTxt.className = "water";
 
 
-            wrapper.appendChild(small);
-            wrapper.appendChild(small2);
+		row_watersitrep.appendChild(WaterTxt);
 
-        } // end currentweather
+		//Display Tide Data
+		var TideIcon = document.createElement("td");
+		TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + ".png" + "'>";
+		TideIcon.className = "wi";
+		row_watersitrep.appendChild(TideIcon);
 
-        // Forecast table
+		var TideTxt = document.createElement("td");
+		if (this.TideTypeCurrent == "Low") {
+			TideTxt.innerHTML = this.TideHeightCurrent + "' @ " + moment(this.TideTimeCurrent).format('LT') + " <br> " + this.DeltaPerc + "% out";
+		} else {
+			TideTxt.innerHTML = this.TideHeightCurrent + "'@ " + moment(this.TideTimeCurrent).format('LT') + " <br> " + this.DeltaPerc + "% in";
+		}
+		TideTxt.className = "small vcen left";
+		row_watersitrep.appendChild(TideTxt);
+
+		//Display Next Tide Data and Time
+		var nextTideIcon = document.createElement("td");
+		nextTideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeNext + ".png" + "'>";
+		nextTideIcon.className = "wi";
+		row_watersitrep.appendChild(nextTideIcon);
+
+		var nextTideTxt = document.createElement("td");
+		nextTideTxt.innerHTML = this.TideHeightNext + "' @ " + moment(this.TideTimeNext).format('LT');
+		nextTideTxt.className = "small vcen left";
+		row_watersitrep.appendChild(nextTideTxt);
+
+		//Close Water Conditions Row in table (second row)
+		table_watersitrep.appendChild(row_watersitrep);
+		small2.appendChild(table_watersitrep);
+
+		//Write Current Weather and Current Water
+		wrapper.appendChild(small);
+		wrapper.appendChild(small2);
+
+
+        // ------------------ 12 HOUR SURF FORECAST ------------------
         //TODO: Make Vertical format work with Surf Forecast! Currently only horizontal
-        // ------------------ Vertical Layout ------------------
+		//TODO: Add vertical v. horizontal test?
         var table = document.createElement("table");
-        table.className = "small";
-        table.setAttribute("width", "25%");
-
-        if (this.config.layout == "vertical") {
-
-            var row = document.createElement("tr");
-            table.appendChild(row);
-
-            if (this.config.fctext == 1) {
-                var forecastTextCell = document.createElement("td");
-                // forecastTextCell.className = "forecastText";
-                forecastTextCell.setAttribute("colSpan", "10");
-                forecastTextCell.innerHTML = this.forecastText;
-
-                row.appendChild(forecastTextCell);
-            }
-
-            row = document.createElement("tr");
-
-            var dayHeader = document.createElement("th");
-            dayHeader.className = "day";
-            dayHeader.innerHTML = "";
-            row.appendChild(dayHeader);
-
-            var iconHeader = document.createElement("th");
-            iconHeader.className = "tableheader icon";
-            iconHeader.innerHTML = "";
-            row.appendChild(iconHeader);
-
-            var maxtempHeader = document.createElement("th");
-            maxtempHeader.className = "align-center bright tableheader";
-            row.appendChild(maxtempHeader);
-
-            var maxtempicon = document.createElement("span");
-            maxtempicon.className = "wi wi-thermometer";
-            maxtempHeader.appendChild(maxtempicon);
-
-
-            var mintempHeader = document.createElement("th");
-            mintempHeader.className = "align-center bright tableheader";
-            row.appendChild(mintempHeader);
-
-            var mintempicon = document.createElement("span");
-            mintempicon.className = "wi wi-thermometer-exterior";
-            mintempHeader.appendChild(mintempicon);
-
-
-            var popiconHeader = document.createElement("th");
-            popiconHeader.className = "align-center bright tableheader";
-            popiconHeader.setAttribute("colSpan", "10");
-            row.appendChild(popiconHeader);
-
-            var popicon = document.createElement("span");
-            popicon.className = "wi wi-umbrella";
-            popicon.setAttribute("colSpan", "10");
-            popiconHeader.appendChild(popicon);
-
-            table.appendChild(row);
-
-            if (this.config.hourly == 1) {
-                for (f in this.forecast) {
-                    forecast = this.hourlyforecast[f * this.config.hourlyinterval];
-
-                    row = document.createElement("tr");
-                    table.appendChild(row);
-
-                    hourCell = document.createElement("td");
-                    hourCell.className = "hourv";
-                    hourCell.innerHTML = forecast.hour;
-                    row.appendChild(hourCell);
-
-                    iconCell = document.createElement("td");
-                    iconCell.className =
-                        "align-center bright weather-icon";
-                    row.appendChild(iconCell);
-
-                    icon = document.createElement("span");
-                    if (this.config.coloricon) {
-                        icon.innerHTML = forecast.icon_url;
-                    } else {
-                        icon.className = "wi " + forecast.icon;
-                    }
-                    iconCell.appendChild(icon);
-
-                    maxTempCell = document.createElement("td");
-                    maxTempCell.innerHTML = forecast.maxTemp + "&deg;";
-                    maxTempCell.className = "align-right max-temp";
-                    row.appendChild(maxTempCell);
-
-                    minTempCell = document.createElement("td");
-                    minTempCell.innerHTML = forecast.minTemp + "&deg;";
-                    minTempCell.className = "align-right min-temp";
-                    row.appendChild(minTempCell);
-
-                    popCell = document.createElement("td");
-                    popCell.innerHTML = forecast.pop + "%";
-                    popCell.className = "align-right pop";
-                    row.appendChild(popCell);
-
-                    mmCell = document.createElement("td");
-                    mmCell.innerHTML = forecast.mm;
-                    mmCell.className = "align-right mm";
-                    row.appendChild(mmCell);
-
-                    if (f > this.config.hourlycount) {
-                        break;
-                    }
-
-                    if (this.config.daily == 0) {
-
-                        if (this.config.fade && this.config.fadePoint < 1) {
-                            if (this.config.fadePoint < 0) {
-                                this.config.fadePoint = 0;
-                            }
-                            startingPoint = this.forecast.length * this.config.fadePoint;
-                            steps = this.forecast.length - startingPoint;
-                            if (f >= startingPoint) {
-                                currentStep = f - startingPoint;
-                                row.style.opacity = 1 - (1 / steps *
-                                    currentStep);
-                            }
-                        }
-                    }
-
-                } //end for loop
-            } // end hourly forecast
-
-
-            if (this.config.daily == 1) {
-                for (f in this.forecast) {
-                    forecast = this.forecast[f];
-
-                    row = document.createElement("tr");
-                    table.appendChild(row);
-
-                    dayCell = document.createElement("td");
-                    dayCell.className = "day";
-                    dayCell.innerHTML = forecast.day;
-                    row.appendChild(dayCell);
-
-                    iconCell = document.createElement("td");
-                    iconCell.className = "align-center bright weather-icon";
-                    row.appendChild(iconCell);
-
-                    icon = document.createElement("span");
-                    if (this.config.coloricon) {
-                        icon.innerHTML = forecast.icon_url;
-                    } else {
-                        icon.className = "wi " + forecast.icon;
-                    }
-                    iconCell.appendChild(icon);
-
-                    maxTempCell = document.createElement("td");
-                    maxTempCell.innerHTML = forecast.maxTemp + "&deg;";
-                    maxTempCell.className = "align-right max-temp";
-                    row.appendChild(maxTempCell);
-
-                    minTempCell = document.createElement("td");
-                    minTempCell.innerHTML = forecast.minTemp + "&deg;";
-                    minTempCell.className = "align-right min-temp";
-                    row.appendChild(minTempCell);
-
-                    popCell = document.createElement("td");
-                    popCell.innerHTML = forecast.pop + "%";
-                    popCell.className = "align-right pop";
-                    row.appendChild(popCell);
-
-                    mmCell = document.createElement("td");
-                    mmCell.innerHTML = forecast.mm;
-                    mmCell.className = "align-right mm";
-                    row.appendChild(mmCell);
-
-                    if (this.config.fade && this.config.fadePoint < 1) {
-                        if (this.config.fadePoint < 0) {
-                            this.config.fadePoint = 0;
-                        }
-                        startingPoint = this.forecast.length * this.config.fadePoint;
-                        steps = this.forecast.length - startingPoint;
-                        if (f >= startingPoint) {
-                            currentStep = f - startingPoint;
-                            row.style.opacity = 1 - (1 / steps *
-                                currentStep);
-                        }
-                    }
-                } // end for loop
-            } //end daily
-
-
-            wrapper.appendChild(table);
-
-        } else {
-            // ------------------ Horizontal Layout ------------------
 
             var fctable = document.createElement("div");
             var divider = document.createElement("hr");
@@ -576,233 +370,282 @@ Module.register("MMM-Surf", {
             table.className = "small";
             table.setAttribute("width", "25%");
 
-            if (this.config.hourly == 1) {
+			row_forecastDay = document.createElement("tr"); 			//layout row for Day and Time
+			row_forecastRating = document.createElement("tr"); 			//layout row for Magicseaweed star rating
+			row_swellCharacteristics = document.createElement("tr"); 	// layout row for swell height and periodicity
+			row_swell = document.createElement("tr"); 					// layout row for swell direction icon and text
+			row_wind = document.createElement("tr"); 					//layout row for wind direction icon and text
 
-                row_time = document.createElement("tr");
-                row_icon = document.createElement("tr");
-                row_temp = document.createElement("tr");
-                row_pop = document.createElement("tr");
-                row_wind = document.createElement("tr");
+			for (f in this.magicforecast12hrs) {
+				dayTimeCell = document.createElement("td");
+				dayTimeCell.className = "hour";
+				dayTimeCell.innerHTML = this.magicforecast12hrs[f].day + " " + this.magicforecast12hrs[f].hour;
+				row_forecastDay.appendChild(dayTimeCell);
+				//Render Magicseaweed star rating
+				magicseaweedStarRating = document.createElement("td");
+				magicseaweedStarRating.className = "align-center bright weather-icon";
+				icon = document.createElement("span");
+				if (this.magicforecast12hrs[f].rating.length == 0) {
+					icon.className = "wi wi-na";
+				} else {
+					icon.innerHTML = this.magicforecast12hrs[f].rating.join(" ");
+				}
+				magicseaweedStarRating.appendChild(icon);
+				row_forecastRating.appendChild(magicseaweedStarRating);
+				//swell height and period
+				swellConditionsCell = document.createElement("td");
+                                /* Evaluate periodicity of swell and pop an indicator color
+                                *  red = not surfable
+                                *  orange = surfable but sloppy
+                                *  green = go go go
+                                *  source: https://magicseaweed.com/help/forecast-table/wave-period-overview
+				*  Evaluate wave height for spot from config. If between Min and Max, pop green
+                                */
+                                if (this.magicforecast12hrs[f].swellHeight >= this.config.spotSwellMin && this.magicforecast12hrs[f].swellHeight <= this.config.spotSwellMax) {
+                                        swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecast12hrs[f].swellHeight +"'</span> @ "; }
+                                else {
+                                        swellHeightRender = this.magicforecast12hrs[f].swellHeight + "' @ ";}
 
-                for (f in this.magicforecast) {
-                    hourCell = document.createElement("td");
-                    hourCell.className = "hour";
-                    hourCell.innerHTML = this.magicforecast[f].day + " " + this.magicforecast[f].hour;
-                    row_time.appendChild(hourCell);
-                    //rating
-                    iconCell = document.createElement("td");
-                    iconCell.className = "align-center bright weather-icon";
-                    icon = document.createElement("span");
-                    if (this.magicforecast[f].rating.length == 0) {
-                        icon.className = "wi wi-na";
-                    } else {
-                        icon.innerHTML = this.magicforecast[f].rating.join(" ");
-                    }
-                    iconCell.appendChild(icon);
-                    row_icon.appendChild(iconCell);
-                    //swell height and period
-                    maxTempCell = document.createElement("td");
-                    maxTempCell.innerHTML = this.magicforecast[f].swellHeight + "' @ " + this.magicforecast[f].swellPeriod + "s"
-                    maxTempCell.className = "hour";
-                    row_temp.appendChild(maxTempCell);
-                    //swell direction
-                    swellInfo = document.createElement("td");
-                    swellInfoCell = document.createElement("i");
-                    swellInfoCell.innerHTML = "Swell: &nbsp;";
-                    swellInfoCell.className = "hour";
-                    swellInfo.appendChild(swellInfoCell);
+                                if (this.magicforecast12hrs[f].swellPeriod >= 0 && this.magicforecast12hrs[f].swellPeriod <= 6)
+                                        {swellPeriodRender = "<span class=\"swellred\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
 
-                    swellInfoCell = document.createElement("i");
+                                if (this.magicforecast12hrs[f].swellPeriod >= 7 && this.magicforecast12hrs[f].swellPeriod <= 9)
+                                        {swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
 
-	            for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
-                        Log.info("Swell Compass Direction: "+ this.magicforecast[f].swellCompassDirection);
-                        Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
+                                if (this.magicforecast12hrs[f].swellPeriod >= 10)
+                                        {swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
+				swellConditionsCell.innerHTML = swellHeightRender.concat(swellPeriodRender);
+				swellConditionsCell.className = "hour";
+				row_swellCharacteristics.appendChild(swellConditionsCell);
+				//swell direction
+				swellInfo = document.createElement("td");
+				swellInfoCell = document.createElement("i");
+				swellInfoCell.innerHTML = "Swell: &nbsp;";
+				swellInfoCell.className = "hour";
+				swellInfo.appendChild(swellInfoCell);
 
-			if (this.config.spotSwellHold[i] === this.magicforecast[f].swellCompassDirection) {
-				//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward. 
-				//The arrow displayed will have the small point facing the origin of the swell
-				swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast[f].swellDirection) + "-deg swellgreen";
-				break;
-			} else{
-				swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast[f].swellDirection) + "-deg";
-			}
-		    } // end swell colorization loop	
+				swellInfoCell = document.createElement("i");
 
-                    swellInfo.appendChild(swellInfoCell);
-                    row_pop.appendChild(swellInfo);
+			for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
+					if (this.config.debug === 1) { 
+						//Log.info("SWELL (forecast/spothold): "+ this.magicforecast12hrs[f].swellCompassDirection+"/"+this.config.spotSwellHold[i]);
+					}
 
-                    //wind direction
-                    windInfo = document.createElement("td");
-                    windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "Wind: &nbsp;";
-                    windInfoCell.className = "hour";
-                    windInfo.appendChild(windInfoCell);
+					if (this.config.spotSwellHold[i] === this.magicforecast12hrs[f].swellCompassDirection) {
+						//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward. 
+						//The arrow displayed will have the small point facing the origin of the swell
+						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast12hrs[f].swellDirection) + "-deg swellgreen";
+						break;
+					} else{
+						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast12hrs[f].swellDirection) + "-deg";
+					}
+					} // end swell colorization loop	
+
+				swellInfo.appendChild(swellInfoCell);
+
+				swellInfoCell = document.createElement("i");
+				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast12hrs[f].swellCompassDirection;
+				swellInfoCell.className = "smaller";
+				swellInfo.appendChild(swellInfoCell);
+				row_swell.appendChild(swellInfo);
+
+				//wind direction
+				windInfo = document.createElement("td");
+				windInfoCell = document.createElement("i");
+				windInfoCell.innerHTML = "Wind: &nbsp;";
+				windInfoCell.className = "hour";
+				windInfo.appendChild(windInfoCell);
+				windInfoCell = document.createElement("i");
+				
+				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
+					//if (this.config.debug === 1) { Log.info("WIND: " + this.magicforecast12hrs[f].windCompassDirection + " / " + this.config.spotWind[i]);}
+						if (this.config.spotWind[i] === this.magicforecast12hrs[f].windCompassDirection) {
+						//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
+						//The arrow displayed will have the small point facing the origin of the wind
+							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellgreen";
+							break;
+					} else {
+							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection;
+					}
+				} // end wind colorization loop
+				windInfo.appendChild(windInfoCell);
+
+				windInfoCell = document.createElement("i");
+				windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast12hrs[f].windGusts + "mph";
+				windInfoCell.className = "smaller";
+				windInfo.appendChild(windInfoCell);
+				row_wind.appendChild(windInfo);
+
+				var nl = Number(f) + 1;
+				if ((nl % 4) === 0) {
+					table.appendChild(row_forecastDay);
+					table.appendChild(row_forecastRating);
+					table.appendChild(row_swellCharacteristics);
+					table.appendChild(row_swell);
+					table.appendChild(row_wind);
+					row_forecastDay = document.createElement("tr");
+					row_forecastRating = document.createElement("tr");
+					row_swellCharacteristics = document.createElement("tr");
+					row_swell = document.createElement("tr");
+					row_wind = document.createElement("tr");
+				}
+				//Force 12-hour row to stay on one line...not entirely sure how this works.	
+				if (f > 2) {
+					break;
+				}
 
 
-                    windInfoCell = document.createElement("i");
-                    for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-			Log.info("WIND: " + this.magicforecast[f].windCompassDirection + " / " + this.config.spotWind[i]);
+			} //end magicforecast12hrs for loop
 
-                        if (this.config.spotWind[i] === this.magicforecast[f].windCompassDirection) {
-				//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
-				//The arrow displayed will have the small point facing the origin of the wind
-                                windInfoCell.className = "wi wi-wind " + this.magicforecast[f].windDirection + " swellgreen";
-				break;
-                        } else {
-                               	windInfoCell.className = "wi wi-wind " + this.magicforecast[f].windDirection;
-                        }
-                    } // end wind colorization loop
+			//write out Forecast table (every 3 hours)
+			table.appendChild(row_forecastDay);
+			table.appendChild(row_forecastRating);
+			table.appendChild(row_swellCharacteristics);
+			table.appendChild(row_swell);
+			table.appendChild(row_wind);
+			fctable.appendChild(table);
+			fctable.appendChild(divider.cloneNode(true));
 
 
-                    windInfo.appendChild(windInfoCell);
 
-                    windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast[f].windSpeed + "/" + this.magicforecast[f].windGusts + "mph";
-                    windInfoCell.className = "smaller";
-                    windInfo.appendChild(windInfoCell);
-                    row_wind.appendChild(windInfo);
-
-                    var nl = Number(f) + 1;
-                    if ((nl % 4) === 0) {
-                        table.appendChild(row_time);
-                        table.appendChild(row_icon);
-                        table.appendChild(row_temp);
-                        table.appendChild(row_pop);
-                        table.appendChild(row_wind);
-                        row_time = document.createElement("tr");
-                        row_icon = document.createElement("tr");
-                        row_temp = document.createElement("tr");
-                        row_pop = document.createElement("tr");
-                        row_wind = document.createElement("tr");
-                    }
-
-                    if (f > this.config.hourlycount) {
-                        break;
-                    }
-                } //end Magicforecast for loop
-
-                //write out Forecast table (every 3 hours)
-                table.appendChild(row_time);
-                table.appendChild(row_icon);
-                table.appendChild(row_temp);
-                table.appendChild(row_pop);
-                table.appendChild(row_wind);
-                fctable.appendChild(table);
-                fctable.appendChild(divider.cloneNode(true));
-
-            } //end this.config.hourly = 1 hourly forecast
-
-            // Create daily forecast
+            // ------------------ DAILY SURF FORECAST ------------------
             table = document.createElement("table");
             table.className = "small";
             table.setAttribute("width", "25%");
 
-            row_time = document.createElement("tr");
-            row_icon = document.createElement("tr");
-            row_temp = document.createElement("tr");
-            row_pop = document.createElement("tr");
+            row_forecastDay = document.createElement("tr");
+            row_forecastRating = document.createElement("tr");
+            row_swellCharacteristics = document.createElement("tr");
+            row_swell = document.createElement("tr");
             row_wind = document.createElement("tr");
 
 
-            if (this.config.daily == 1) {
-                for (f in this.magicforecastDaily) {
-                    dayCell = document.createElement("td");
-                    dayCell.className = "hour";
-                    dayCell.innerHTML = this.magicforecastDaily[f].day + " " + this.magicforecastDaily[f].hour;
-                    row_time.appendChild(dayCell);
-                    //rating
-                    iconCell = document.createElement("td");
-                    iconCell.className = "align-center bright weather-icon";
-                    icon = document.createElement("span");
-                    if (this.magicforecastDaily[f].rating.length == 0) {
-                        icon.className = "wi wi-na";
-                    } else {
-                        icon.innerHTML = this.magicforecastDaily[f].rating.join(" ");
-                    }
-                    iconCell.appendChild(icon);
-                    row_icon.appendChild(iconCell);
-                    //swell height and period
-                    maxTempCell = document.createElement("td");
-                    maxTempCell.innerHTML = this.magicforecastDaily[f].swellHeight + "' @ " + this.magicforecastDaily[f].swellPeriod + "s"
-                    maxTempCell.className = "hour";
-                    row_temp.appendChild(maxTempCell);
-                    //swell direction
-                    swellInfo = document.createElement("td");
-                    swellInfoCell = document.createElement("i");
-                    swellInfoCell.innerHTML = "Swell: &nbsp;";
-                    swellInfoCell.className = "hour";
-                    swellInfo.appendChild(swellInfoCell);
-                    swellInfoCell = document.createElement("i");
-                    for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
-                        Log.info("Swell Compass Direction: "+ this.magicforecastDaily[f].swellCompassDirection);
-                        Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
 
-                        if (this.config.spotSwellHold[i] === this.magicforecastDaily[f].swellCompassDirection) {
-                                //Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward.
-                                //The arrow displayed will have the small point facing the origin of the swell
-                                swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg swellgreen";
-                                break;
-                        } else{
-                                swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg";
-                        }
-                    } // end swell colorization loop
-                    swellInfo.appendChild(swellInfoCell);
-                    row_pop.appendChild(swellInfo);
-                    //wind direction
-                    windInfo = document.createElement("td");
-                    windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "Wind: &nbsp;";
-                    windInfoCell.className = "hour";
-                    windInfo.appendChild(windInfoCell);
+			for (f in this.magicforecastDaily) {
+				dayCell = document.createElement("td");
+				dayCell.className = "hour";
+				dayCell.innerHTML = this.magicforecastDaily[f].day + " " + this.magicforecastDaily[f].hour;
+				row_forecastDay.appendChild(dayCell);
+				//rating
+				magicseaweedStarRating = document.createElement("td");
+				magicseaweedStarRating.className = "align-center bright weather-icon";
+				icon = document.createElement("span");
+				if (this.magicforecastDaily[f].rating.length == 0) {
+					icon.className = "wi wi-na";
+				} else {
+					icon.innerHTML = this.magicforecastDaily[f].rating.join(" ");
+				}
+				magicseaweedStarRating.appendChild(icon);
+				row_forecastRating.appendChild(magicseaweedStarRating);
+				//swell height and period
+				swellConditionsCell = document.createElement("td");
+                                /* Evaluate periodicity of swell and pop an indicator color
+                                *  red = not surfable
+                                *  orange = surfable but sloppy
+                                *  green = go go go
+                                *  source: https://magicseaweed.com/help/forecast-table/wave-period-overview
+                                *  Evaluate wave height for spot from config. If between Min and Max, pop green
+                                */
+                                if (this.magicforecastDaily[f].swellHeight >= this.config.spotSwellMin && this.magicforecastDaily[f].swellHeight <= this.config.spotSwellMax) {
+                                        swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellHeight +"'</span> @ "; }
+                                else {
+                                        swellHeightRender = this.magicforecastDaily[f].swellHeight + "' @ ";}
 
-                    windInfoCell = document.createElement("i");
+                                if (this.magicforecastDaily[f].swellPeriod >= 0 && this.magicforecastDaily[f].swellPeriod <= 6)
+                                        {swellPeriodRender = "<span class=\"swellred\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
 
-                    for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-                        Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
+                                if (this.magicforecastDaily[f].swellPeriod >= 7 && this.magicforecastDaily[f].swellPeriod <= 9)
+                                        {swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
 
-                        if (this.config.spotWind[i] === this.magicforecastDaily[f].windCompassDirection) {
-                                //Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
-                                //The arrow displayed will have the small point facing the origin of the wind
-                                windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellgreen";
-                                break;
-                        } else {
-                                windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection;
-                        }
-                    } // end wind colorization loop
-                    windInfo.appendChild(windInfoCell);
+                                if (this.magicforecastDaily[f].swellPeriod >= 10)
+                                        {swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
+				swellConditionsCell.innerHTML = swellHeightRender.concat(swellPeriodRender);
+				swellConditionsCell.className = "hour";
+				row_swellCharacteristics.appendChild(swellConditionsCell);
+				//swell direction
+				swellInfo = document.createElement("td");
+				swellInfoCell = document.createElement("i");
+				swellInfoCell.innerHTML = "Swell: &nbsp;";
+				swellInfoCell.className = "hour";
+				swellInfo.appendChild(swellInfoCell);
+				swellInfoCell = document.createElement("i");
+				for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
+					//Log.info("Swell Compass Direction: "+ this.magicforecastDaily[f].swellCompassDirection);
+					//Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
 
-                    windInfoCell = document.createElement("i");
-                    windInfoCell.innerHTML = "<br>&nbsp;&nbsp;" + this.magicforecastDaily[f].windSpeed + "/" + this.magicforecastDaily[f].windGusts + "mph";
-                    windInfoCell.className = "smaller";
-                    windInfo.appendChild(windInfoCell);
-                    row_wind.appendChild(windInfo);
+					if (this.config.spotSwellHold[i] === this.magicforecastDaily[f].swellCompassDirection) {
+							//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward.
+							//The arrow displayed will have the small point facing the origin of the swell
+							swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg swellgreen";
+							break;
+					} else{
+							swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecastDaily[f].swellDirection) + "-deg";
+					}
+				} // end swell colorization loop
+				swellInfo.appendChild(swellInfoCell);
 
-                    var nl = Number(f) + 1;
-                    if ((nl % 4) === 0) {
-                        table.appendChild(row_time);
-                        table.appendChild(row_icon);
-                        table.appendChild(row_temp);
-                        table.appendChild(row_pop);
-                        table.appendChild(row_wind);
-                        row_time = document.createElement("tr");
-                        row_icon = document.createElement("tr");
-                        row_temp = document.createElement("tr");
-                        row_pop = document.createElement("tr");
-                        row_wind = document.createElement("tr");
-                    }
+				swellInfoCell = document.createElement("i");
+				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecastDaily[f].swellCompassDirection;
+				swellInfoCell.className = "smaller";
+				swellInfo.appendChild(swellInfoCell);
 
-                } //end magicForecastDaily loop
+				row_swell.appendChild(swellInfo);
+				//wind direction
+				windInfo = document.createElement("td");
+				windInfoCell = document.createElement("i");
+				windInfoCell.innerHTML = "Wind: &nbsp;";
+				windInfoCell.className = "hour";
+				windInfo.appendChild(windInfoCell);
 
-                table.appendChild(row_time);
-                table.appendChild(row_icon);
-                table.appendChild(row_temp);
-                table.appendChild(row_pop);
-                table.appendChild(row_wind);
-                fctable.appendChild(table);
-                wrapper.appendChild(fctable);
-            } // end this.config.daily if statement
+				windInfoCell = document.createElement("i");
 
-        } //end Else statement 
+				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
+					//Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
+
+					if (this.config.spotWind[i] === this.magicforecastDaily[f].windCompassDirection) {
+							//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
+							//The arrow displayed will have the small point facing the origin of the wind
+							windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellgreen";
+							break;
+					} else {
+							windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection;
+					}
+				} // end wind colorization loop
+				windInfo.appendChild(windInfoCell);
+
+				windInfoCell = document.createElement("i");
+				windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecastDaily[f].windGusts + "mph";
+
+				windInfoCell.className = "smaller";
+				windInfo.appendChild(windInfoCell);
+				row_wind.appendChild(windInfo);
+
+				var nl = Number(f) + 1;
+				if ((nl % 4) === 0) {
+					table.appendChild(row_forecastDay);
+					table.appendChild(row_forecastRating);
+					table.appendChild(row_swellCharacteristics);
+					table.appendChild(row_swell);
+					table.appendChild(row_wind);
+					row_forecastDay = document.createElement("tr");
+					row_forecastRating = document.createElement("tr");
+					row_swellCharacteristics = document.createElement("tr");
+					row_swell = document.createElement("tr");
+					row_wind = document.createElement("tr");
+				}
+
+			} //end magicForecastDaily loop
+			
+			//render everything to UI
+			table.appendChild(row_forecastDay);
+			table.appendChild(row_forecastRating);
+			table.appendChild(row_swellCharacteristics);
+			table.appendChild(row_swell);
+			table.appendChild(row_wind);
+			fctable.appendChild(table);
+			wrapper.appendChild(fctable);
+
+
         return wrapper; //return the wrapper to browser for rendering
     }, //end getDom function
 
@@ -850,14 +693,6 @@ Module.register("MMM-Surf", {
             // See issue: https://github.com/MichMich/MagicMirror/issues/181
 
             var sunriseSunsetDateObject = (sunrise < now && sunset > now) ? sunset : sunrise;
-
-            if (this.config.enableCompliments === 1) {
-                var complimentIconSuffix = (sunrise < now && sunset > now) ? "d" : "n";
-                var complimentIcon = '{"data":{"weather":[{"icon":"' + this.config.iconTableCompliments[data.current_observation.icon] + complimentIconSuffix + '"}]}}';
-                var complimentIconJson = JSON.parse(complimentIcon);
-                this.sendNotification("CURRENTWEATHER_DATA", complimentIconJson);
-            }
-
             var timeString = moment(sunriseSunsetDateObject).format("HH:mm");
 
             if (this.config.timeFormat !== 24) {
@@ -1054,42 +889,158 @@ Module.register("MMM-Surf", {
         //if (this.config.debug === 1) {Log.info(data);}	//print Object to browser console 
 
         for (i = 0, count = data.length; i < count; i++) {
-            //set IGNORE flag for forecast times we don't care about (1am, 7pm, 10pm)
-            //Focusing on surfable hours...dawn patrol through sunset. 
-            //TODO: Make config item to allow user customization...?
-            //var msHours = moment.unix(data[i].localTimestamp).format('HH');
-            //if (msHours == 01 ||
-            //    msHours == 19 ||
-            //    msHours == 22) {
-            //    data[i].localTimestamp = "IGNORE";
-            //}
-            //set IGNORE flag for forecast data in the past...
-            //TODO: refine to include most recent forecast in the past need to mimic the tide data... 
-            if (moment.unix(data[i].localTimestamp) < now) {
-                data[i].localTimestamp = "IGNORE";
-            }
-            // Set flag for working on current day. Influences hourly forecast and Daily forecast object creationbelow
-            if (moment.unix(data[i].localTimestamp).format('ddd') == moment(now).format('ddd')) {
-                data[i].today = "true";
+           	// identify the forecasts in the next 12 hours for rendering in 12hr
+		// forecast row
+		// Capture the forecast that is in the current window of 3 hours
+		var currentForecast = moment.unix(data[i].localTimestamp);
+		var firstForecast = moment(now).subtract(3, 'hours');
+		var lastForecast = moment(firstForecast).add(12, 'hours'); 
+	   if (currentForecast >= firstForecast && currentForecast <= lastForecast ) { 
+                data[i].next12hrs = "true";
             } else {
-                data[i].today = "false";
+                data[i].next12hrs = "false";
             }
+	   if (currentForecast < firstForecast) {data[i].localTimestamp = "IGNORE";} //ignore things far in the past	
         } //end for loop
 
+
         for (i = 0, count = data.length; i < count; i++) {
+		/* STEP 0
+		 * Forecast score for displaying each day's best possible time to surf
+		 * Crude but effective...remember, this is to make you look on the
+		 * forecast websites for more data not SCIENCE!
+		 */
+
+		var forecastScore = 0;
+		// MS star rating forms basis of score
+		if (data[i].solidRating > 0) {forecastScore = data[i].solidRating;} 
+		// +1 if the swell height is within bounds for the spot set in the config
+		if (data[i].swell.components.primary.height >= this.config.spotSwellMin && data[i].swell.components.primary.height <= this.config.spotSwellMax) {forecastScore++;}
+		// +1 if the period is over 8s
+		if (data[i].swell.components.primary.period >=8) {forecastScore++;} 
+		// +1 if swell direction is good for the spot as defined in config
+                for (z = 0, countz = this.config.spotSwellHold.length; z < countz; z++) {
+			if (this.config.spotSwellHold[z] == data[i].swell.components.primary.compassDirection) {forecastScore++;}
+		} 
+		// +1 if Wind direction is good for the spot as defined in config
+                for (x = 0, countx = this.config.spotWind.length; x < countx; x++) {
+			if (this.config.spotWind[x] == data[i].wind.compassDirection) {forecastScore++;}
+		}
+		// +1 is there are only 1 or 2 swells. 3 swells gets no points as it may be slop
+		if (Object.keys(data[i].swell.components).length <=2) {forecastScore++;}
+		// +1 if wind speed is less than 15mph
+		if (data[i].wind.speed < 15) {forecastScore++;} 
+		// -1 if wind speed is greater than or equal 15mph
+		if (data[i].wind.speed >= 15) {forecastScore--;}
+		// -1 if gusts are over 20 mph
+		if (data[i].wind.gusts >= 20) {forecastScore--;}
+		// -1 for generally unsurfable times 1am, 7pm, and 10pm
+		if (moment.unix(data[i].localTimestamp).format('HH') == 01 || 
+			moment.unix(data[i].localTimestamp).format('HH') == 19 ||
+			moment.unix(data[i].localTimestamp).format('HH') == 22) {forecastScore--;}
+		data[i].forecastScore = forecastScore;
+		data[i].forecastDay = moment.unix(data[i].localTimestamp).format('ddd');	
+	} // end forecast score loop
+
+
+	/*
+	 * STEP 1 to find best forecast day:
+	 * Build array with limited info from our raw Magicseaweed table
+	 * Includes: Day, time (hour), score from above, and timestamp
+	 */
+	var forecastsByDateSortable = [];
+	var forecastsByDateSorted = [];
+	for (i = 0, count = data.length; i < count; i++) {
+		if (data[i].localTimestamp != "IGNORE" && data[i].next12hrs == "false") {
+                if(forecastsByDateSortable[data[i].forecastDay] == null) {
+			forecastsByDateSortable.push({
+			day: data[i].forecastDay,
+			time: moment.unix(data[i].localTimestamp).format('hh:mm A'), 
+                        score: data[i].forecastScore,
+                        timestamp: data[i].localTimestamp});
+                        
+                } else {
+                        forecastsByDateSortable.push({
+			day: data[i].forecastDay,
+			time: moment.unix(data[i].localTimestamp).format('hh:mm A'),
+                        score: data[i].forecastScore,
+                        timestamp: data[i].localTimestamp});
+                }
+        }}
+	
+	/*
+	 * STEP 2: Sort Array created in Step 1 
+	 * dynamicSort & dynamicSortMultiple from  
+	 * StackOverflow user: https://stackoverflow.com/users/300011/ege-%c3%96zcan 
+	 * https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value-in-javascript/4760279#4760279
+	 */ 
+	function dynamicSort(property) {
+		var sortOrder = 1;
+		if(property[0] === "-") {
+			sortOrder = -1;
+			property = property.substr(1);
+		}
+		return function (a,b) {
+			var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+			return result * sortOrder;
+		} //end return function
+	} //end dynamicSort function
+	function dynamicSortMultiple() {
+		/*
+		 * save the arguments object as it will be overwritten
+		 * note that arguments object is an array-like object
+		 * consisting of the names of the properties to sort by
+		 */
+		var props = arguments;
+		return function (obj1, obj2) {
+			var i = 0, result = 0, numberOfProperties = props.length;
+			/* try getting a different result from 0 (equal)
+			 * as long as we have extra properties to compare
+			 */
+			while(result === 0 && i < numberOfProperties) {
+				result = dynamicSort(props[i])(obj1, obj2);
+				i++;
+			}
+			return result;
+		} // end return function
+	} //end dynamicSortMultiple function
+
+
+	//STEP 3 - Create new, sorted, array
+	forecastsByDateSorted = forecastsByDateSortable.sort(dynamicSortMultiple("day", "-score"));
+
+
+	//STEP 4 - Create new Object keyed by Day of week. The first entry per day is the "best".
+	var forecastsByDate = {};
+	for (i = 0, count = forecastsByDateSorted.length; i < count; i++) {
+		if (forecastsByDate[forecastsByDateSorted[i].day] == null) {
+			forecastsByDate[forecastsByDateSorted[i].day] = [];
+		} 
+		forecastsByDate[forecastsByDateSorted[i].day].push(forecastsByDateSorted[i]);
+	}
+	//STEP 5 - Pull the timestamp(s) for the identified best days into an array.
+	var bestTimestamps = [];
+	for(var key in forecastsByDate) {
+		bestTimestamps.push(forecastsByDate[key][0].timestamp);
+	}		
+
+	//STEP 6 - match values in bestTimestamps array with timestamp values in data[]
+	// set dailybest flag when values match 
+	for (i = 0, count = data.length; i < count; i++) {		
             //Identify best Daily forecast for daily forecast table
             //TODO: This is super hacky but just for testing...
-            if (data[i].localTimestamp != "IGNORE" && data[i].today == "false") {
-                if (moment.unix(data[i].localTimestamp).format('HH') == 10) {
-                    data[i].dailyBest = "true";
-                }
+		for (xz = 0, countxz = bestTimestamps.length; xz < countxz; xz++) {
+			if (bestTimestamps[xz] == data[i].localTimestamp) {
+				data[i].dailyBest = "true";
+			}
+		}
 
-            } //end if
         } //end for	
 
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed API Response:") };
         if (this.config.debug === 1) { Log.info(data) }; //show data after manipulations above
 
-        this.magicforecast = []; // rebuild MagicSeaweed hourly data to shape our needs
+        this.magicforecast12hrs = []; // rebuild MagicSeaweed hourly data to shape our needs
         this.magicforecastDaily = []; //daily
         for (i = 0, count = data.length; i < count; i++) {
             if (data[i].localTimestamp != "IGNORE") {
@@ -1115,7 +1066,9 @@ Module.register("MMM-Surf", {
                     this.multipleSwell = "true";
                 } else {
                     this.multipleSwell = "false";
+
                 }
+				
                 //Pull Primary swell info only. ignore combined, secondary, and tertiary 
                 //Ignored for screen space considerations
                 this.swellMaxBreakingHeight = data[i].swell.maxBreakingHeight;
@@ -1130,9 +1083,9 @@ Module.register("MMM-Surf", {
                 this.windspeed = data[i].wind.speed;
                 this.windunit = data[i].wind.unit;
                 this.dailyBest = data[i].dailyBest;
-                //Build "hourly" forecast for today
-                if (data[i].today == "true") {
-                    this.magicforecast.push({
+                //Build next 12-hours forecast 
+                if (data[i].next12hrs == "true") {
+                    this.magicforecast12hrs.push({
                         day: this.magicday,
                         hour: this.magichour,
                         best: this.dailyBest,
@@ -1182,7 +1135,9 @@ Module.register("MMM-Surf", {
             } // end IGNORE if statement	
         } //end for loop
 
-        if (this.config.debug === 1) { Log.info(this.magicforecast); } //print Object to browser console
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed 12 Hours Forecast:") };
+        if (this.config.debug === 1) { Log.info(this.magicforecast12hrs); } //print Object to browser console
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed Daily Forecast:") };
         if (this.config.debug === 1) { Log.info(this.magicforecastDaily); } //print Object to browser console
 
         this.loaded = true;
