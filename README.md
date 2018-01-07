@@ -4,7 +4,7 @@ MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module tha
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
-![image](https://user-images.githubusercontent.com/9799911/33796393-7a7d06d4-dcc1-11e7-9396-d4a348669fbc.png)
+![image](https://user-images.githubusercontent.com/9799911/34655229-3b42feae-f3d4-11e7-85b6-e49b1e0b5e78.PNG)
 
 ### Prerequisites
 
@@ -98,7 +98,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 ## Contributors
 * **[CaptainJimmy](https://github.com/CaptainJimmy)** - Code optimization and beautification.  
-
+* **[sh3rp] (https://github.com/sh3rp)** - Education and pointers around the process for identifying the best forecast for each day
 ## License
 
 This project is licensed under the Attribution 4.0 International (CC BY 4.0) license  - see the [LICENSE.md](LICENSE.md) file for details

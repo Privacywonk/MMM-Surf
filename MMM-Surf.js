@@ -183,8 +183,6 @@ Module.register("MMM-Surf", {
         var forecast;
         var iconCell;
         var icon;
-        var maxTempCell;
-        var minTempCell;
         var popCell;
         var mmCell;
         var hourCell;
@@ -227,7 +225,7 @@ Module.register("MMM-Surf", {
 			var row = document.createElement("tr");
 			var spotTextCell = document.createElement("td");
 			//display spot name from config
-			spotTextCell.className = "forecastText";
+			spotTextCell.className = "spotName";
 			spotTextCell.setAttribute("colSpan", "10");
 			//spotTextCell.innerHTML = this.config.MagicSeaweedSpotName + "&nbsp; <img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
 			spotTextCell.innerHTML = this.config.MagicSeaweedSpotName;
@@ -303,21 +301,22 @@ Module.register("MMM-Surf", {
 		var row_watersitrep = document.createElement("tr");
 		row_watersitrep.className = "pop";
 
-		// Display Water Temperature
-                //wetsuit eval
+		/* Display Water Temperature & Gear Choices
+		 * wetsuit/gear choice evals water temp and makes a recommendation
+		 * Not a science...weather conditions will influence your choice
+		 */
                 gear = "";
                 WaterEval = Math.round(WaterTemp);
                 if (WaterEval >= 73) {gear = "Boardies!";}
-                if (WaterEval >= 69 && WaterEval <= 72) { gear = "0.5 mm - 2/1 mm";}
-                if (WaterEval >= 62 && WaterEval <= 68) { gear = "2 mm - 3/2 mm";}
-                if (WaterEval >= 58 && WaterEval <= 61) { gear = "3/2 mm - 4/3 mm";}
-                if (WaterEval >= 52 && WaterEval <= 57) { gear = "4/3 mm - 5/4/3 mm";}
-                if (WaterEval >= 43 && WaterEval <= 51) { gear = "5/4 mm - 5/4/3 mm";}
-                if (WaterEval <= 42) {gear = "6/5 mm - 6/5/4 mm";}
+                if (WaterEval >= 65 && WaterEval <= 72) { gear = "2mm";}
+                if (WaterEval >= 59 && WaterEval <= 64) { gear = "3/2";}
+                if (WaterEval >= 54 && WaterEval <= 58) { gear = "4/3";}
+                if (WaterEval >= 47 && WaterEval <= 53) { gear = "5/4/3";}
+                if (WaterEval <= 46) {gear = "6/5/4";}
 		
 
 		var WaterTxt = document.createElement("td");
-		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make any fucking difference
+		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make a  difference
 		WaterTxt.className = "water";
 
 
@@ -358,7 +357,7 @@ Module.register("MMM-Surf", {
 		wrapper.appendChild(small2);
 
 
-        // ------------------ 24 HOUR SURF FORECAST ------------------
+        // ------------------ 12 HOUR SURF FORECAST ------------------
         //TODO: Make Vertical format work with Surf Forecast! Currently only horizontal
 		//TODO: Add vertical v. horizontal test?
         var table = document.createElement("table");
@@ -377,19 +376,19 @@ Module.register("MMM-Surf", {
 			row_swell = document.createElement("tr"); 					// layout row for swell direction icon and text
 			row_wind = document.createElement("tr"); 					//layout row for wind direction icon and text
 
-			for (f in this.magicforecast24hrs) {
+			for (f in this.magicforecast12hrs) {
 				dayTimeCell = document.createElement("td");
 				dayTimeCell.className = "hour";
-				dayTimeCell.innerHTML = this.magicforecast24hrs[f].day + " " + this.magicforecast24hrs[f].hour;
+				dayTimeCell.innerHTML = this.magicforecast12hrs[f].day + " " + this.magicforecast12hrs[f].hour;
 				row_forecastDay.appendChild(dayTimeCell);
 				//Render Magicseaweed star rating
 				magicseaweedStarRating = document.createElement("td");
 				magicseaweedStarRating.className = "align-center bright weather-icon";
 				icon = document.createElement("span");
-				if (this.magicforecast24hrs[f].rating.length == 0) {
+				if (this.magicforecast12hrs[f].rating.length == 0) {
 					icon.className = "wi wi-na";
 				} else {
-					icon.innerHTML = this.magicforecast24hrs[f].rating.join(" ");
+					icon.innerHTML = this.magicforecast12hrs[f].rating.join(" ");
 				}
 				magicseaweedStarRating.appendChild(icon);
 				row_forecastRating.appendChild(magicseaweedStarRating);
@@ -402,20 +401,20 @@ Module.register("MMM-Surf", {
                                 *  source: https://magicseaweed.com/help/forecast-table/wave-period-overview
 				*  Evaluate wave height for spot from config. If between Min and Max, pop green
                                 */
-				if (this.magicforecastDaily[f].swellHeight >= this.config.spotSwellMin && this.magicforecastDaily[f].swellHeight <= this.config.spotSwellMax) {
-					swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellHeight +"'</span> @ "; }
-				else {
-					swellHeightRender = this.magicforecastDaily[f].swellHeight + "' @ ";}
-		
-				if (this.magicforecastDaily[f].swellPeriod >= 0 && this.magicforecastDaily[f].swellPeriod <= 6)
-					{swellPeriodRender = "<span class=\"swellred\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
-		
-				if (this.magicforecastDaily[f].swellPeriod >= 7 && this.magicforecastDaily[f].swellPeriod <= 9)
-					{swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
-		
-				if (this.magicforecastDaily[f].swellPeriod >= 10)
-					{swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
-				swellConditionsCell.innerHTML = swellHeightRender + swellPeriodRender;
+                                if (this.magicforecast12hrs[f].swellHeight >= this.config.spotSwellMin && this.magicforecast12hrs[f].swellHeight <= this.config.spotSwellMax) {
+                                        swellHeightRender = "<span class=\"swellgreen\">" + this.magicforecast12hrs[f].swellHeight +"'</span> @ "; }
+                                else {
+                                        swellHeightRender = this.magicforecast12hrs[f].swellHeight + "' @ ";}
+
+                                if (this.magicforecast12hrs[f].swellPeriod >= 0 && this.magicforecast12hrs[f].swellPeriod <= 6)
+                                        {swellPeriodRender = "<span class=\"swellred\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
+
+                                if (this.magicforecast12hrs[f].swellPeriod >= 7 && this.magicforecast12hrs[f].swellPeriod <= 9)
+                                        {swellPeriodRender = "<span class=\"swellorange\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
+
+                                if (this.magicforecast12hrs[f].swellPeriod >= 10)
+                                        {swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecast12hrs[f].swellPeriod + "s</span>";}
+				swellConditionsCell.innerHTML = swellHeightRender.concat(swellPeriodRender);
 				swellConditionsCell.className = "hour";
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
@@ -429,23 +428,23 @@ Module.register("MMM-Surf", {
 
 			for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
 					if (this.config.debug === 1) { 
-						Log.info("SWELL (forecast/spothold): "+ this.magicforecast24hrs[f].swellCompassDirection+"/"+this.config.spotSwellHold[i]);
+						//Log.info("SWELL (forecast/spothold): "+ this.magicforecast12hrs[f].swellCompassDirection+"/"+this.config.spotSwellHold[i]);
 					}
 
-					if (this.config.spotSwellHold[i] === this.magicforecast24hrs[f].swellCompassDirection) {
+					if (this.config.spotSwellHold[i] === this.magicforecast12hrs[f].swellCompassDirection) {
 						//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward. 
 						//The arrow displayed will have the small point facing the origin of the swell
-						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast24hrs[f].swellDirection) + "-deg swellgreen";
+						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast12hrs[f].swellDirection) + "-deg swellgreen";
 						break;
 					} else{
-						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast24hrs[f].swellDirection) + "-deg";
+						swellInfoCell.className = "wi wi-wind from-" + Math.round(this.magicforecast12hrs[f].swellDirection) + "-deg";
 					}
 					} // end swell colorization loop	
 
 				swellInfo.appendChild(swellInfoCell);
 
 				swellInfoCell = document.createElement("i");
-				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast24hrs[f].swellCompassDirection;
+				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast12hrs[f].swellCompassDirection;
 				swellInfoCell.className = "smaller";
 				swellInfo.appendChild(swellInfoCell);
 				row_swell.appendChild(swellInfo);
@@ -459,20 +458,20 @@ Module.register("MMM-Surf", {
 				windInfoCell = document.createElement("i");
 				
 				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-					if (this.config.debug === 1) { Log.info("WIND: " + this.magicforecast24hrs[f].windCompassDirection + " / " + this.config.spotWind[i]);}
-						if (this.config.spotWind[i] === this.magicforecast24hrs[f].windCompassDirection) {
+					//if (this.config.debug === 1) { Log.info("WIND: " + this.magicforecast12hrs[f].windCompassDirection + " / " + this.config.spotWind[i]);}
+						if (this.config.spotWind[i] === this.magicforecast12hrs[f].windCompassDirection) {
 						//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
 						//The arrow displayed will have the small point facing the origin of the wind
-							windInfoCell.className = "wi wi-wind " + this.magicforecast24hrs[f].windDirection + " swellgreen";
+							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellgreen";
 							break;
 					} else {
-							windInfoCell.className = "wi wi-wind " + this.magicforecast24hrs[f].windDirection;
+							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection;
 					}
 				} // end wind colorization loop
 				windInfo.appendChild(windInfoCell);
 
 				windInfoCell = document.createElement("i");
-				windInfoCell.innerHTML = "&nbsp;" + this.magicforecast24hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast24hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast24hrs[f].windGusts + "mph";
+				windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast12hrs[f].windGusts + "mph";
 				windInfoCell.className = "smaller";
 				windInfo.appendChild(windInfoCell);
 				row_wind.appendChild(windInfo);
@@ -490,13 +489,13 @@ Module.register("MMM-Surf", {
 					row_swell = document.createElement("tr");
 					row_wind = document.createElement("tr");
 				}
-				//Force 24-hour row to stay on one line...not entirely sure how this works.	
+				//Force 12-hour row to stay on one line...not entirely sure how this works.	
 				if (f > 2) {
 					break;
 				}
 
 
-			} //end magicforecast24hrs for loop
+			} //end magicforecast12hrs for loop
 
 			//write out Forecast table (every 3 hours)
 			table.appendChild(row_forecastDay);
@@ -560,7 +559,7 @@ Module.register("MMM-Surf", {
 
                                 if (this.magicforecastDaily[f].swellPeriod >= 10)
                                         {swellPeriodRender = "<span class=\"swellgreen\">" + this.magicforecastDaily[f].swellPeriod + "s</span>";}
-                                swellConditionsCell.innerHTML = swellHeightRender + swellPeriodRender;
+				swellConditionsCell.innerHTML = swellHeightRender.concat(swellPeriodRender);
 				swellConditionsCell.className = "hour";
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
@@ -571,8 +570,8 @@ Module.register("MMM-Surf", {
 				swellInfo.appendChild(swellInfoCell);
 				swellInfoCell = document.createElement("i");
 				for (i = 0, count = this.config.spotSwellHold.length; i < count; i++) {
-					Log.info("Swell Compass Direction: "+ this.magicforecastDaily[f].swellCompassDirection);
-					Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
+					//Log.info("Swell Compass Direction: "+ this.magicforecastDaily[f].swellCompassDirection);
+					//Log.info("Spot Best Swell: " +this.config.spotSwellHold[i]);
 
 					if (this.config.spotSwellHold[i] === this.magicforecastDaily[f].swellCompassDirection) {
 							//Swell direction is the direction the swell is coming from, as opposed to the direction it is heading toward.
@@ -601,7 +600,7 @@ Module.register("MMM-Surf", {
 				windInfoCell = document.createElement("i");
 
 				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-					Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
+					//Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
 
 					if (this.config.spotWind[i] === this.magicforecastDaily[f].windCompassDirection) {
 							//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
@@ -890,43 +889,158 @@ Module.register("MMM-Surf", {
         //if (this.config.debug === 1) {Log.info(data);}	//print Object to browser console 
 
         for (i = 0, count = data.length; i < count; i++) {
-            //set IGNORE flag for forecast times we don't care about (1am, 7pm, 10pm)
-            //TODO: refine to include most recent forecast in the past need to mimic the tide data... 
-            //if (moment.unix(data[i].localTimestamp) < now) {
-            //    data[i].localTimestamp = "IGNORE";
-            //}
-            // Set flag for working on current day. Influences hourly forecast and Daily forecast object creationbelow
-            if (moment.unix(data[i].localTimestamp).format('ddd') == moment(now).format('ddd')) {
-		//if we add an OR conditional above for +12 hours we should be able to pull in
-		//day change data...how?
-                data[i].today = "true";
+           	// identify the forecasts in the next 12 hours for rendering in 12hr
+		// forecast row
+		// Capture the forecast that is in the current window of 3 hours
+		var currentForecast = moment.unix(data[i].localTimestamp);
+		var firstForecast = moment(now).subtract(3, 'hours');
+		var lastForecast = moment(firstForecast).add(12, 'hours'); 
+	   if (currentForecast >= firstForecast && currentForecast <= lastForecast ) { 
+                data[i].next12hrs = "true";
             } else {
-                data[i].today = "false";
+                data[i].next12hrs = "false";
             }
+	   if (currentForecast < firstForecast) {data[i].localTimestamp = "IGNORE";} //ignore things far in the past	
         } //end for loop
 
-	for (i = 0, count = data.length; i < count; i++) {
-		if (data[i].today == "true") {
-			if (moment.unix(data[i].localTimestamp) < now) {
-				data[i].localTimestamp = "IGNORE";
-			}
-		}
-	} //end for loop	
 
         for (i = 0, count = data.length; i < count; i++) {
+		/* STEP 0
+		 * Forecast score for displaying each day's best possible time to surf
+		 * Crude but effective...remember, this is to make you look on the
+		 * forecast websites for more data not SCIENCE!
+		 */
+
+		var forecastScore = 0;
+		// MS star rating forms basis of score
+		if (data[i].solidRating > 0) {forecastScore = data[i].solidRating;} 
+		// +1 if the swell height is within bounds for the spot set in the config
+		if (data[i].swell.components.primary.height >= this.config.spotSwellMin && data[i].swell.components.primary.height <= this.config.spotSwellMax) {forecastScore++;}
+		// +1 if the period is over 8s
+		if (data[i].swell.components.primary.period >=8) {forecastScore++;} 
+		// +1 if swell direction is good for the spot as defined in config
+                for (z = 0, countz = this.config.spotSwellHold.length; z < countz; z++) {
+			if (this.config.spotSwellHold[z] == data[i].swell.components.primary.compassDirection) {forecastScore++;}
+		} 
+		// +1 if Wind direction is good for the spot as defined in config
+                for (x = 0, countx = this.config.spotWind.length; x < countx; x++) {
+			if (this.config.spotWind[x] == data[i].wind.compassDirection) {forecastScore++;}
+		}
+		// +1 is there are only 1 or 2 swells. 3 swells gets no points as it may be slop
+		if (Object.keys(data[i].swell.components).length <=2) {forecastScore++;}
+		// +1 if wind speed is less than 15mph
+		if (data[i].wind.speed < 15) {forecastScore++;} 
+		// -1 if wind speed is greater than or equal 15mph
+		if (data[i].wind.speed >= 15) {forecastScore--;}
+		// -1 if gusts are over 20 mph
+		if (data[i].wind.gusts >= 20) {forecastScore--;}
+		// -1 for generally unsurfable times 1am, 7pm, and 10pm
+		if (moment.unix(data[i].localTimestamp).format('HH') == 01 || 
+			moment.unix(data[i].localTimestamp).format('HH') == 19 ||
+			moment.unix(data[i].localTimestamp).format('HH') == 22) {forecastScore--;}
+		data[i].forecastScore = forecastScore;
+		data[i].forecastDay = moment.unix(data[i].localTimestamp).format('ddd');	
+	} // end forecast score loop
+
+
+	/*
+	 * STEP 1 to find best forecast day:
+	 * Build array with limited info from our raw Magicseaweed table
+	 * Includes: Day, time (hour), score from above, and timestamp
+	 */
+	var forecastsByDateSortable = [];
+	var forecastsByDateSorted = [];
+	for (i = 0, count = data.length; i < count; i++) {
+		if (data[i].localTimestamp != "IGNORE" && data[i].next12hrs == "false") {
+                if(forecastsByDateSortable[data[i].forecastDay] == null) {
+			forecastsByDateSortable.push({
+			day: data[i].forecastDay,
+			time: moment.unix(data[i].localTimestamp).format('hh:mm A'), 
+                        score: data[i].forecastScore,
+                        timestamp: data[i].localTimestamp});
+                        
+                } else {
+                        forecastsByDateSortable.push({
+			day: data[i].forecastDay,
+			time: moment.unix(data[i].localTimestamp).format('hh:mm A'),
+                        score: data[i].forecastScore,
+                        timestamp: data[i].localTimestamp});
+                }
+        }}
+	
+	/*
+	 * STEP 2: Sort Array created in Step 1 
+	 * dynamicSort & dynamicSortMultiple from  
+	 * StackOverflow user: https://stackoverflow.com/users/300011/ege-%c3%96zcan 
+	 * https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value-in-javascript/4760279#4760279
+	 */ 
+	function dynamicSort(property) {
+		var sortOrder = 1;
+		if(property[0] === "-") {
+			sortOrder = -1;
+			property = property.substr(1);
+		}
+		return function (a,b) {
+			var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+			return result * sortOrder;
+		} //end return function
+	} //end dynamicSort function
+	function dynamicSortMultiple() {
+		/*
+		 * save the arguments object as it will be overwritten
+		 * note that arguments object is an array-like object
+		 * consisting of the names of the properties to sort by
+		 */
+		var props = arguments;
+		return function (obj1, obj2) {
+			var i = 0, result = 0, numberOfProperties = props.length;
+			/* try getting a different result from 0 (equal)
+			 * as long as we have extra properties to compare
+			 */
+			while(result === 0 && i < numberOfProperties) {
+				result = dynamicSort(props[i])(obj1, obj2);
+				i++;
+			}
+			return result;
+		} // end return function
+	} //end dynamicSortMultiple function
+
+
+	//STEP 3 - Create new, sorted, array
+	forecastsByDateSorted = forecastsByDateSortable.sort(dynamicSortMultiple("day", "-score"));
+
+
+	//STEP 4 - Create new Object keyed by Day of week. The first entry per day is the "best".
+	var forecastsByDate = {};
+	for (i = 0, count = forecastsByDateSorted.length; i < count; i++) {
+		if (forecastsByDate[forecastsByDateSorted[i].day] == null) {
+			forecastsByDate[forecastsByDateSorted[i].day] = [];
+		} 
+		forecastsByDate[forecastsByDateSorted[i].day].push(forecastsByDateSorted[i]);
+	}
+	//STEP 5 - Pull the timestamp(s) for the identified best days into an array.
+	var bestTimestamps = [];
+	for(var key in forecastsByDate) {
+		bestTimestamps.push(forecastsByDate[key][0].timestamp);
+	}		
+
+	//STEP 6 - match values in bestTimestamps array with timestamp values in data[]
+	// set dailybest flag when values match 
+	for (i = 0, count = data.length; i < count; i++) {		
             //Identify best Daily forecast for daily forecast table
             //TODO: This is super hacky but just for testing...
-            if (data[i].localTimestamp != "IGNORE" && data[i].today == "false") {
-                if (moment.unix(data[i].localTimestamp).format('HH') == 10) {
-                    data[i].dailyBest = "true";
-                }
+		for (xz = 0, countxz = bestTimestamps.length; xz < countxz; xz++) {
+			if (bestTimestamps[xz] == data[i].localTimestamp) {
+				data[i].dailyBest = "true";
+			}
+		}
 
-            } //end if
         } //end for	
 
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed API Response:") };
         if (this.config.debug === 1) { Log.info(data) }; //show data after manipulations above
 
-        this.magicforecast24hrs = []; // rebuild MagicSeaweed hourly data to shape our needs
+        this.magicforecast12hrs = []; // rebuild MagicSeaweed hourly data to shape our needs
         this.magicforecastDaily = []; //daily
         for (i = 0, count = data.length; i < count; i++) {
             if (data[i].localTimestamp != "IGNORE") {
@@ -952,6 +1066,7 @@ Module.register("MMM-Surf", {
                     this.multipleSwell = "true";
                 } else {
                     this.multipleSwell = "false";
+
                 }
 				
                 //Pull Primary swell info only. ignore combined, secondary, and tertiary 
@@ -968,9 +1083,9 @@ Module.register("MMM-Surf", {
                 this.windspeed = data[i].wind.speed;
                 this.windunit = data[i].wind.unit;
                 this.dailyBest = data[i].dailyBest;
-                //Build next 24-hours forecast 
-                if (data[i].today == "true") {
-                    this.magicforecast24hrs.push({
+                //Build next 12-hours forecast 
+                if (data[i].next12hrs == "true") {
+                    this.magicforecast12hrs.push({
                         day: this.magicday,
                         hour: this.magichour,
                         best: this.dailyBest,
@@ -1020,7 +1135,9 @@ Module.register("MMM-Surf", {
             } // end IGNORE if statement	
         } //end for loop
 
-        if (this.config.debug === 1) { Log.info(this.magicforecast24hrs); } //print Object to browser console
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed 12 Hours Forecast:") };
+        if (this.config.debug === 1) { Log.info(this.magicforecast12hrs); } //print Object to browser console
+	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed Daily Forecast:") };
         if (this.config.debug === 1) { Log.info(this.magicforecastDaily); } //print Object to browser console
 
         this.loaded = true;
