@@ -118,27 +118,26 @@ module.exports = NodeHelper.create({
 
                 if (!error && response.statusCode == 200) {
                     this.NOAAPayload = body;
-                    //if ( self.config.debug === 1 ) {console.log(moment().format() + ' NOAA Water Temp API RESULT(4): ' + self.name + ': ' + body);}
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: NOAA Water Temp API RESULT(4): Received';
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                     self.sendSocketNotification('NOAA_WATERTEMP', body);
                 } else {
-                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: NOAA Water Temp API ERROR (5):  ' + error;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
-                setTimeout(function() {
-                    //if ( self.config.debug === 1 ) {console.log('setTimeout called in NOAA module ' + self.config.updateInterval);}
+/*                setTimeout(function() {
                     if (self.config.debug === 1) {
                         apiMessage = moment().format() + ' HELPER: setTimeout called in fetchNOAAData(WaterTemp): ' + self.config.updateInterval;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                     self.fetchNOAAData();
-                }, self.config.updateInterval);
+
+                });
+*/
             } //end request(function())
         ); //end request() for Water Temp
         //NOAA Tide Data

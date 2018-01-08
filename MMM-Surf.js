@@ -965,8 +965,9 @@ Module.register("MMM-Surf", {
 			time: moment.unix(data[i].localTimestamp).format('hh:mm A'),
                         score: data[i].forecastScore,
                         timestamp: data[i].localTimestamp});
-                }
-        }}
+                }//end else
+        	}//end if
+	} //end for
 	
 	/*
 	 * STEP 2: Sort Array created in Step 1 
@@ -979,7 +980,7 @@ Module.register("MMM-Surf", {
 		if(property[0] === "-") {
 			sortOrder = -1;
 			property = property.substr(1);
-		}
+		} //end if
 		return function (a,b) {
 			var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
 			return result * sortOrder;
@@ -1000,7 +1001,7 @@ Module.register("MMM-Surf", {
 			while(result === 0 && i < numberOfProperties) {
 				result = dynamicSort(props[i])(obj1, obj2);
 				i++;
-			}
+			} //end while
 			return result;
 		} // end return function
 	} //end dynamicSortMultiple function
@@ -1009,32 +1010,29 @@ Module.register("MMM-Surf", {
 	//STEP 3 - Create new, sorted, array
 	forecastsByDateSorted = forecastsByDateSortable.sort(dynamicSortMultiple("day", "-score"));
 
-
 	//STEP 4 - Create new Object keyed by Day of week. The first entry per day is the "best".
 	var forecastsByDate = {};
 	for (i = 0, count = forecastsByDateSorted.length; i < count; i++) {
 		if (forecastsByDate[forecastsByDateSorted[i].day] == null) {
 			forecastsByDate[forecastsByDateSorted[i].day] = [];
-		} 
+		} //end if
 		forecastsByDate[forecastsByDateSorted[i].day].push(forecastsByDateSorted[i]);
-	}
+	} //end for
+
 	//STEP 5 - Pull the timestamp(s) for the identified best days into an array.
 	var bestTimestamps = [];
 	for(var key in forecastsByDate) {
 		bestTimestamps.push(forecastsByDate[key][0].timestamp);
-	}		
+	} //end for		
 
 	//STEP 6 - match values in bestTimestamps array with timestamp values in data[]
 	// set dailybest flag when values match 
 	for (i = 0, count = data.length; i < count; i++) {		
-            //Identify best Daily forecast for daily forecast table
-            //TODO: This is super hacky but just for testing...
 		for (xz = 0, countxz = bestTimestamps.length; xz < countxz; xz++) {
 			if (bestTimestamps[xz] == data[i].localTimestamp) {
 				data[i].dailyBest = "true";
-			}
-		}
-
+			} //end if
+		} //end nested for
         } //end for	
 
 	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed API Response:") };
