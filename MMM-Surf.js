@@ -31,7 +31,8 @@ Module.register("MMM-Surf", {
         units: config.units,
         windunits: "bft", // choose from mph, bft
         updateInterval: 3600000, //1 Hour (60 minutes) in miliseconds  -  Hardcoded as we don't need to hammer this API.
-        animationSpeed: 1000,
+//	updateInterval: 60000, // 5 minutes for testing 
+	animationSpeed: 1000,
         timeFormat: config.timeFormat,
         lang: config.language,
         showWindDirection: true,
@@ -151,30 +152,41 @@ Module.register("MMM-Surf", {
         this.loaded = false;
         this.error = false;
         this.errorDescription = "";
-        this.getWunder();
-        this.getNOAA();
+	this.getNOAA();
+	this.getWunder();
         this.getMagicseaweed();
-        this.updateTimer = null;
+	this.updateTimer = null;
+	this.lastUpdatedTime = ""; 
+	this.scheduleUpdate();
         this.haveforecast = 0;
-
     },
 
     getNOAA: function() {
-        if (this.config.debug === 1) { Log.info(moment().format() + " SOCKET(SEND TO HELPER): GET_NOAA (1):"); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_NOAA (1):"); }
         this.sendSocketNotification("GET_NOAA", this.config);
     }, //end getNOAA function
 
     getWunder: function() {
-        if (this.config.debug === 1) { Log.info(moment().format() + " SOCKET(SEND TO HELPER): GET_WUNDERGROUND (1):"); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_WUNDERGROUND (1):"); }
         this.sendSocketNotification("GET_WUNDERGROUND", this.config);
     }, //end GetWunder
 
-
     getMagicseaweed: function() {
-        if (this.config.debug === 1) { Log.info(moment().format() + " SOCKET(SEND TO HELPER): GET_MAGIC (1):"); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_MAGIC (1):"); }
         this.sendSocketNotification("GET_MAGIC", this.config);
+	    lastUpdatedTime = moment().format('YYYY-MM-DD >> HH:mm:ssZZ'); //set last update time. 
     }, //end getMagicseaweed function
 
+	scheduleUpdate: function() {
+		var nextload = this.config.updateInterval;
+		var self = this;
+		this.updateTimer = setInterval(function() {
+			if (self.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + "  UPDATE: scheduledUpdate called fetching new data: " + self.config.updateInterval); }
+			self.getNOAA(self);
+			self.getWunder(self);
+			self.getMagicseaweed(self);
+		}, nextload);
+	},
 
     // Override dom generator.
     getDom: function() {
@@ -227,7 +239,6 @@ Module.register("MMM-Surf", {
 			//display spot name from config
 			spotTextCell.className = "spotName";
 			spotTextCell.setAttribute("colSpan", "10");
-			//spotTextCell.innerHTML = this.config.MagicSeaweedSpotName + "&nbsp; <img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
 			spotTextCell.innerHTML = this.config.MagicSeaweedSpotName;
 
 			spot_row.appendChild(spotTextCell);
@@ -369,6 +380,7 @@ Module.register("MMM-Surf", {
             table = document.createElement("table");
             table.className = "small";
             table.setAttribute("width", "25%");
+	    //table.setAttribute("border", 1); // for layout testing only
 
 			row_forecastDay = document.createElement("tr"); 			//layout row for Day and Time
 			row_forecastRating = document.createElement("tr"); 			//layout row for Magicseaweed star rating
@@ -378,11 +390,13 @@ Module.register("MMM-Surf", {
 
 			for (f in this.magicforecast12hrs) {
 				dayTimeCell = document.createElement("td");
+				dayTimeCell.setAttribute('style', 'text-align: center;');
 				dayTimeCell.className = "hour";
 				dayTimeCell.innerHTML = this.magicforecast12hrs[f].day + " " + this.magicforecast12hrs[f].hour;
 				row_forecastDay.appendChild(dayTimeCell);
 				//Render Magicseaweed star rating
 				magicseaweedStarRating = document.createElement("td");
+				magicseaweedStarRating.setAttribute('style', 'text-align: center;');
 				magicseaweedStarRating.className = "align-center bright weather-icon";
 				icon = document.createElement("span");
 				if (this.magicforecast12hrs[f].rating.length == 0) {
@@ -394,6 +408,7 @@ Module.register("MMM-Surf", {
 				row_forecastRating.appendChild(magicseaweedStarRating);
 				//swell height and period
 				swellConditionsCell = document.createElement("td");
+				swellConditionsCell.setAttribute('style', 'text-align: center;');
                                 /* Evaluate periodicity of swell and pop an indicator color
                                 *  red = not surfable
                                 *  orange = surfable but sloppy
@@ -419,7 +434,8 @@ Module.register("MMM-Surf", {
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
 				swellInfo = document.createElement("td");
-				swellInfoCell = document.createElement("i");
+				swellInfoCell = document.createElement("strong");
+				swellInfo.setAttribute('style', 'text-align: center;');
 				swellInfoCell.innerHTML = "Swell: &nbsp;";
 				swellInfoCell.className = "hour";
 				swellInfo.appendChild(swellInfoCell);
@@ -445,13 +461,14 @@ Module.register("MMM-Surf", {
 
 				swellInfoCell = document.createElement("i");
 				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecast12hrs[f].swellCompassDirection;
-				swellInfoCell.className = "smaller";
+				swellInfoCell.className = "hour";
 				swellInfo.appendChild(swellInfoCell);
 				row_swell.appendChild(swellInfo);
 
 				//wind direction
 				windInfo = document.createElement("td");
-				windInfoCell = document.createElement("i");
+				windInfo.setAttribute('style', 'text-align: center;');
+				windInfoCell = document.createElement("strong");
 				windInfoCell.innerHTML = "Wind: &nbsp;";
 				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
@@ -472,7 +489,7 @@ Module.register("MMM-Surf", {
 
 				windInfoCell = document.createElement("i");
 				windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast12hrs[f].windGusts + "mph";
-				windInfoCell.className = "smaller";
+				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
 				row_wind.appendChild(windInfo);
 
@@ -518,16 +535,17 @@ Module.register("MMM-Surf", {
             row_swellCharacteristics = document.createElement("tr");
             row_swell = document.createElement("tr");
             row_wind = document.createElement("tr");
-
-
+	    row_lastUpdated = document.createElement("tr");
 
 			for (f in this.magicforecastDaily) {
 				dayCell = document.createElement("td");
+				dayCell.setAttribute('style', 'text-align: center;');
 				dayCell.className = "hour";
 				dayCell.innerHTML = this.magicforecastDaily[f].day + " " + this.magicforecastDaily[f].hour;
 				row_forecastDay.appendChild(dayCell);
 				//rating
 				magicseaweedStarRating = document.createElement("td");
+				magicseaweedStarRating.setAttribute('style', 'text-align: center;');
 				magicseaweedStarRating.className = "align-center bright weather-icon";
 				icon = document.createElement("span");
 				if (this.magicforecastDaily[f].rating.length == 0) {
@@ -539,6 +557,7 @@ Module.register("MMM-Surf", {
 				row_forecastRating.appendChild(magicseaweedStarRating);
 				//swell height and period
 				swellConditionsCell = document.createElement("td");
+				swellConditionsCell.setAttribute('style', 'text-align: center;');
                                 /* Evaluate periodicity of swell and pop an indicator color
                                 *  red = not surfable
                                 *  orange = surfable but sloppy
@@ -564,7 +583,8 @@ Module.register("MMM-Surf", {
 				row_swellCharacteristics.appendChild(swellConditionsCell);
 				//swell direction
 				swellInfo = document.createElement("td");
-				swellInfoCell = document.createElement("i");
+				swellInfo.setAttribute('style', 'text-align: center;');
+				swellInfoCell = document.createElement("strong");
 				swellInfoCell.innerHTML = "Swell: &nbsp;";
 				swellInfoCell.className = "hour";
 				swellInfo.appendChild(swellInfoCell);
@@ -586,13 +606,14 @@ Module.register("MMM-Surf", {
 
 				swellInfoCell = document.createElement("i");
 				swellInfoCell.innerHTML = "&nbsp;&nbsp;" + this.magicforecastDaily[f].swellCompassDirection;
-				swellInfoCell.className = "smaller";
+				swellInfoCell.className = "hour";
 				swellInfo.appendChild(swellInfoCell);
 
 				row_swell.appendChild(swellInfo);
 				//wind direction
 				windInfo = document.createElement("td");
-				windInfoCell = document.createElement("i");
+				windInfo.setAttribute('style', 'text-align: center;');
+				windInfoCell = document.createElement("strong");
 				windInfoCell.innerHTML = "Wind: &nbsp;";
 				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
@@ -616,7 +637,7 @@ Module.register("MMM-Surf", {
 				windInfoCell = document.createElement("i");
 				windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecastDaily[f].windGusts + "mph";
 
-				windInfoCell.className = "smaller";
+				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
 				row_wind.appendChild(windInfo);
 
@@ -634,9 +655,13 @@ Module.register("MMM-Surf", {
 					row_wind = document.createElement("tr");
 				}
 
+                               //Force Daily row to stay on one line...not entirely sure how this works.
+			        if (f > 2) {
+			        break;
+			        }
 			} //end magicForecastDaily loop
 			
-			//render everything to UI
+			//Close forecast table for rendering to UI
 			table.appendChild(row_forecastDay);
 			table.appendChild(row_forecastRating);
 			table.appendChild(row_swellCharacteristics);
@@ -644,7 +669,18 @@ Module.register("MMM-Surf", {
 			table.appendChild(row_wind);
 			fctable.appendChild(table);
 			wrapper.appendChild(fctable);
-
+	    		
+	    		//lastupdated indicator
+	    var table_lastUpdated = document.createElement("table");
+	    var row_lastUpdated = document.createElement("tr");
+	    lastUpdatedCell = document.createElement("td");
+		lastUpdatedCell.setAttribute('style', "display:flex; flex-wrap: nowrap; align-items: center;font-size: 40%");
+	    lastUpdatedCell.setAttribute("colSpan", "10");
+	   // lastUpdatedCell.className = "weathericon";
+	    lastUpdatedCell.innerHTML = "last updated at: " + lastUpdatedTime + "&nbsp; &nbsp; &nbsp; &nbsp;<img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
+	    row_lastUpdated.appendChild(lastUpdatedCell);
+	    table_lastUpdated.appendChild(row_lastUpdated);
+	    wrapper.appendChild(table_lastUpdated);
 
         return wrapper; //return the wrapper to browser for rendering
     }, //end getDom function
@@ -658,7 +694,7 @@ Module.register("MMM-Surf", {
 
     processWeather: function(data) {
         if (this.config.debug === 1) { Log.info(data); } //print Object to browser console
-        if (this.config.debug === 1) { Log.info(moment().format() + " Processing Data: Wunderground (6)") };
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: Wunderground (6)") };
         if (data.current_observation.estimated.hasOwnProperty("estimated") && this.haveforecast == 1) {
             if (this.config.debug === 1) { console.log("WeatherUnderground served us an estimated forecast. Skipping update..."); }
             return;
@@ -738,7 +774,7 @@ Module.register("MMM-Surf", {
 
             this.loaded = true;
             this.updateDom(this.config.animationSpeed);
-            if (this.config.debug === 1) { Log.info(moment().format() + ' Rendering Wunderground data to UI (7)'); }
+            if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering Wunderground data to UI (7)'); }
             if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
         } //end if/else clause
     }, //end processWunderground
@@ -750,7 +786,7 @@ Module.register("MMM-Surf", {
      */
     processNOAA_TIDE_DATA: function(data) {
         //JSON Structure - { "predictions" : [{"t":"2017-11-24 04:28", "v":"0.845", "type":"L"}
-        if (this.config.debug === 1) { Log.info(moment().format() + " Processing Data: NOAA_TIDE (6)") };
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: NOAA_TIDE (6)") };
         if (this.config.debug === 1) { Log.info(data); } //print Object to browser console
 
         var previousTideCount = 0;
@@ -838,7 +874,7 @@ Module.register("MMM-Surf", {
         }
         this.loaded = true;
         this.updateDom(this.config.animationSpeed);
-        if (this.config.debug === 1) { Log.info(moment().format() + ' Rendering NOAA Tide data to UI (7)'); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering NOAA Tide data to UI (7)'); }
         if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
     }, // end processNOAA_TIDE_DATA function
 
@@ -853,7 +889,7 @@ Module.register("MMM-Surf", {
         //Example JSON structure:
         //"metadata":{"id":"8534720","name":"Atlantic City","lat":"39.3550","lon":"-74.4183"}, 
         //"data": [{"t":"2017-11-24 00:00", "v":"50.7", "f":"0,0,0"}
-        if (this.config.debug === 1) { Log.info(moment().format() + " Processing Data: NOAA Water Temp (6)") };
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: NOAA Water Temp (6)") };
         if (this.config.debug === 1) { Log.info(data); } //print Object to browser console
         var stationID = data.metadata.id; //only used in debug mode currently
         var stationName = data.metadata.name; //only used in debug mode currently
@@ -873,7 +909,7 @@ Module.register("MMM-Surf", {
 
         this.loaded = true;
         this.updateDom(this.config.animationSpeed);
-        if (this.config.debug === 1) { Log.info(moment().format() + ' Rendering NOAA Water Temp data to UI (7)'); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering NOAA Water Temp data to UI (7)'); }
         if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
     }, // end processNOAA_WATERTEMP function
 
@@ -885,7 +921,7 @@ Module.register("MMM-Surf", {
      */
 
     processMAGICSEAWEED: function(data) {
-        if (this.config.debug === 1) { Log.info(moment().format() + " Processing Data: Magicseaweed (6)") };
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: Magicseaweed (6)") };
         //if (this.config.debug === 1) {Log.info(data);}	//print Object to browser console 
 
         for (i = 0, count = data.length; i < count; i++) {
@@ -1035,7 +1071,7 @@ Module.register("MMM-Surf", {
 		} //end nested for
         } //end for	
 
-	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed API Response:") };
+	if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Magicseaweed API Response:") };
         if (this.config.debug === 1) { Log.info(data) }; //show data after manipulations above
 
         this.magicforecast12hrs = []; // rebuild MagicSeaweed hourly data to shape our needs
@@ -1133,14 +1169,14 @@ Module.register("MMM-Surf", {
             } // end IGNORE if statement	
         } //end for loop
 
-	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed 12 Hours Forecast:") };
+	if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Magicseaweed 12 Hours Forecast:") };
         if (this.config.debug === 1) { Log.info(this.magicforecast12hrs); } //print Object to browser console
-	if (this.config.debug === 1) { Log.info(moment().format() + " Magicseaweed Daily Forecast:") };
+	if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Magicseaweed Daily Forecast:") };
         if (this.config.debug === 1) { Log.info(this.magicforecastDaily); } //print Object to browser console
 
         this.loaded = true;
         this.updateDom(this.config.animationSpeed);
-        if (this.config.debug === 1) { Log.info(moment().format() + ' Rendering Magicseaweed data to UI (7)'); }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering Magicseaweed data to UI (7)'); }
         if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
     }, //end processMAGICSEAWEED
 
@@ -1252,19 +1288,19 @@ Module.register("MMM-Surf", {
             var self = this;
 
             if (notification === 'WUNDERGROUND') {
-                if (this.config.debug === 1) { Log.info(moment().format() + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
+                if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processWeather(JSON.parse(payload));
             }
             if (notification === 'NOAA_TIDE_DATA') {
-                if (this.config.debug === 1) { Log.info(moment().format() + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
+                if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processNOAA_TIDE_DATA(JSON.parse(payload));
             }
             if (notification === 'NOAA_WATERTEMP') {
-                if (this.config.debug === 1) { Log.info(moment().format() + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
+                if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processNOAA_WATERTEMP(JSON.parse(payload));
             }
             if (notification === 'MAGICSEAWEED') {
-                if (this.config.debug === 1) { Log.info(moment().format() + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
+                if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processMAGICSEAWEED(JSON.parse(payload));
             }
             if (notification === 'HELPER_MESSAGE') {
