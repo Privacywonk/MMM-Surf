@@ -3,14 +3,10 @@
  * Module: MMM-Surf 
  * Forked from RedNax's MMM-Wunderground module
  * By PrivacyWonk 
- * MIT Licensed.
+ * CC BY-NC 4.0 Licensed.
  */
 
-//define some globals
-var spotText = "";
-var now = new Date();
-//TODO: Move more variables to global place and stop using "this." construct
-var WaterTemp = "";
+//var WaterTemp = null;
 
 Module.register("MMM-Surf", {
 
@@ -30,8 +26,7 @@ Module.register("MMM-Surf", {
         noaatz: "", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
         units: config.units,
         windunits: "bft", // choose from mph, bft
-        updateInterval: 3600000, //1 Hour (60 minutes) in miliseconds  -  Hardcoded as we don't need to hammer this API.
-//	updateInterval: 60000, // 5 minutes for testing 
+	updateInterval: 30*60*1000, // conversion to milliseconds (Minutes * 60 Seconds * 1000). Only change minutes. Be kind, don't hammer APIs.
 	animationSpeed: 1000,
         timeFormat: config.timeFormat,
         lang: config.language,
@@ -317,7 +312,7 @@ Module.register("MMM-Surf", {
 		 * Not a science...weather conditions will influence your choice
 		 */
                 gear = "";
-                WaterEval = Math.round(WaterTemp);
+                WaterEval = Math.round(this.WaterTemp);
                 if (WaterEval >= 73) {gear = "Boardies!";}
                 if (WaterEval >= 65 && WaterEval <= 72) { gear = "2mm";}
                 if (WaterEval >= 59 && WaterEval <= 64) { gear = "3/2";}
@@ -327,7 +322,7 @@ Module.register("MMM-Surf", {
 		
 
 		var WaterTxt = document.createElement("td");
-		WaterTxt.innerHTML = Math.round(WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make a  difference
+		WaterTxt.innerHTML = Math.round(this.WaterTemp) + "&deg; <br>" + "<span class=\"smaller\"> Gear: <br>" + gear + "</span>"; //round to nearest whole because 50.2 degrees doesn't make a  difference
 		WaterTxt.className = "water";
 
 
@@ -727,7 +722,7 @@ Module.register("MMM-Surf", {
             // The moment().format("h") method has a bug on the Raspberry Pi.
             // So we need to generate the timestring manually.
             // See issue: https://github.com/MichMich/MagicMirror/issues/181
-
+	    var now = new Date(); // pull in T/D for processing
             var sunriseSunsetDateObject = (sunrise < now && sunset > now) ? sunset : sunrise;
             var timeString = moment(sunriseSunsetDateObject).format("HH:mm");
 
@@ -804,6 +799,7 @@ Module.register("MMM-Surf", {
             var PrevTideTime = new Date(previous.t); //get previous tide date element [i-1]
             if (current.type == "H") { data.predictions[i].type = "High"; } //change Object element from H to High
             if (current.type == "L") { data.predictions[i].type = "Low"; } //change Object element from L to Low
+	    var now = new Date(); //define current time/date for processing
 
             if ((CurrentTide == "" || CurrentTide == "false") && (TideTableTime >= now && TideTableTime <= NextTideTime)) {
                 //Evaluate if the Tide is current, if so skip. If no, evaluate time of tide
@@ -898,13 +894,15 @@ Module.register("MMM-Surf", {
 
         //Effeciency assumption: most current reading will always be last element
         //NOAA provides 13 measurements. Object counts start at 0...need to subtract 1 to get to item 12, the most recent measurement
+	var now = new Date();
         var CurrentHour = now.getHours();
         var WaterTempLength = data.data.length - 1;
         var WaterTempTime = new Date(data.data[WaterTempLength].t);
         var WaterTempHour = WaterTempTime.getHours();
-        WaterTemp = data.data[WaterTempLength].v; // pull current water temp from data.
+
+	this.WaterTemp = data.data[WaterTempLength].v; // pull current water temp from data.
         if (this.config.debug === 1) {
-            Log.info("***CURRENT WATER*** temperature at " + stationName + " is: " + WaterTemp + " at " + WaterTempTime + ".");
+            Log.info("***CURRENT WATER*** temperature at " + stationName + " is: " + this.WaterTemp + " at " + WaterTempTime + ".");
         }
 
         this.loaded = true;
@@ -929,6 +927,7 @@ Module.register("MMM-Surf", {
 		// forecast row
 		// Capture the forecast that is in the current window of 3 hours
 		var currentForecast = moment.unix(data[i].localTimestamp);
+		var now = new Date(); //current time/date for processing
 		var firstForecast = moment(now).subtract(3, 'hours');
 		var lastForecast = moment(firstForecast).add(12, 'hours'); 
 	   if (currentForecast >= firstForecast && currentForecast <= lastForecast ) { 
