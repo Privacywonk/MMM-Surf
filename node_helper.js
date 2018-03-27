@@ -2,7 +2,7 @@
  * Module: MMM-Surf
  *
  * By PrivacyWonk 
- * MIT Licensed.
+ * CC BY-NC 4.0 Licensed.
  */
 
 
