@@ -19,11 +19,20 @@
 }
 
 .MMM-Surf .swellred {
-  color: #FF0055;
+  /* color: #FF0055; */
+	color: #C00000;
 }
 
 .MMM-Surf .swellorange {
   color: #FF5500;
+}
+
+.MMM-Surf .swellblue { 
+  color: #3dafeb;
+} 
+
+.fa-small {
+  font-size: .8em;
 }
 
 

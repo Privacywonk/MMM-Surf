@@ -2,9 +2,9 @@
 
 MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA).
 
-The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The Magicseaweed star rating system, height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
+The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The [Magicseaweed star rating system](https://magicseaweed.com/help/forecast-table/star-rating), height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
-![image](https://user-images.githubusercontent.com/9799911/37928485-faba035e-310a-11e8-90bb-daca18812be0.PNG)
+![image](https://user-images.githubusercontent.com/9799911/39096515-0dd16c7e-461f-11e8-8b14-8f64dbe41bc5.png)
 
 ### Prerequisites
 

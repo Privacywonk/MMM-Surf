@@ -11,6 +11,7 @@ var request = require('request');
 var moment = require('moment');
 const exec = require('child_process').exec;
 var helperDebug = "";
+var tempTime = "";
 
 module.exports = NodeHelper.create({
     start: function() {
@@ -20,11 +21,37 @@ module.exports = NodeHelper.create({
         this.wunderPayload = "";
         //NOAA Water Temp and Tides
         this.NOAAfetcherRunning = false;
-        this.NOAAPayload = "";
+        this.NOAATidePayload = "";
+	this.NOAATempPayload = "";
         //Magicseaweed Surf Forecast
         this.MAGICfetcherRunning = false;
         this.magicseaweed = "";
+	this.started = false;
     },
+
+	scheduleUpdate: function() {
+		var nextload = this.config.updateInterval;
+		tempTime = moment();
+		tempTime.add(nextload, 'ms'); 
+		console.log ("INITIAL LOAD - NEXT LOAD TIME: " +tempTime.format('YYYY-MM-DD >> HH:mm:ss.SSSZZ'));
+		var self = this;
+                if (this.config.debug === 1) {
+			apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' UPDATE: Next update set for: ' + tempTime.format('YYYY-MM-DD >> HH:mm:ss.SSSZZ');
+		        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+		}
+		this.updateTimer = setInterval(function() {
+			if (self.config.debug === 1) { 
+				apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' UPDATE: scheduleUpdate() triggered. Fetching new data'; 
+				self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+			}
+			self.fetchNOAAData(self);
+			self.fetchWunderground(self);
+			self.fetchMagicseaweedData(self);
+			tempTime = moment();
+			tempTime.add(nextload, 'ms');
+			console.log ("UPDATE LOAD - NEXT LOAD TIME: " +tempTime.format('YYYY-MM-DD >> HH:mm:ss.SSSZZ'));
+	}, nextload); //define update setInterval timer
+}, //end scheduleUpdate function
 
     /* 
      * build Wunderground API request
@@ -53,8 +80,9 @@ module.exports = NodeHelper.create({
             function(error, response, body) {
 
                 if (!error && response.statusCode == 200) {
-                    this.wunderPayload = body;
-                    //for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
+                    //this.wunderPayload = body;
+			wunderPayload = body;
+			//for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
                     //but with declaration of self = this...we change to self.config.debug et voila.
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + '  HELPER: Wunderground Data API RESPONSE (4): Received';
@@ -67,13 +95,6 @@ module.exports = NodeHelper.create({
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
-               // setInterval(function() {
-               //     if (self.config.debug === 1) {
-               //         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: setInterval called in fetchWunderground: ' + self.config.updateInterval;
-               //         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-               //     }
-               //     self.fetchWunderground();
-               // }, self.config.updateInterval);
             } // end request(function())
         ); // end request()
         this.WufetcherRunning = false; // turn our running flag off.
@@ -110,12 +131,14 @@ module.exports = NodeHelper.create({
             }, function(error, response, body) {
 
                 if (!error && response.statusCode == 200) {
-                    this.NOAAPayload = body;
+                    //this.NOAATempPayload = body;
+			NOAATempPayload = body;
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: NOAA Water Temp API RESULT(4): Received';
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
-                    self.sendSocketNotification('NOAA_WATERTEMP', body);
+
+			self.sendSocketNotification('NOAA_WATERTEMP', body);
                 } else {
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: NOAA Water Temp API ERROR (5):  ' + error;
@@ -138,7 +161,8 @@ module.exports = NodeHelper.create({
             },
             function(error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    this.NOAAPayload = body;
+                    //this.NOAATidePayload = body;
+			NOAATidePayload = body;
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: NOAA Tide Data API RESULT(4): Received';
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
@@ -151,16 +175,6 @@ module.exports = NodeHelper.create({
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
-
-	//	setInterval(function() {
-        //            if (self.config.debug === 1) {
-        //                apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: setInterval called in fetchNOAAData: ' + self.config.updateInterval;
-
-        //                self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-        //            }
-        //            self.fetchNOAAData();
-        //        }, self.config.updateInterval);
-
 
             } //end request(function())
         ); //end request() for NOAA Tides
@@ -184,26 +198,24 @@ module.exports = NodeHelper.create({
             },
             function(error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    this.magicseaweed = body;
+                    //this.magicseaweed = body;
+			magicseaweed = body;
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: Magicseaweed API RESULT(4): Received';
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
-                    self.sendSocketNotification('MAGICSEAWEED', body);
-                } else {
+			self.sendSocketNotification('MAGICSEAWEED', body);
+			this.sendCachedTime = "";
+			sendCachedTime = moment().format('YYYY-MM-DD >> HH:mm:ss.SSSZZ');
+			self.sendSocketNotification('LAST_UPDATED', sendCachedTime); //send notification back to MMM-Surf.js to set update time
+
+
+		} else {
                     if (self.config.debug === 1) {
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: Magicseaweed API ERROR(4):  ' + error;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
-             //   setInterval(function() {
-             //       if (self.config.debug === 1) {
-             //           apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: setInterval called in fetchMagicseaweedData: ' + self.config.updateInterval;
-             //           self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
-             //       }
-             //       self.fetchMagicseaweedData();
-             //   }, self.config.updateInterval);
-
             } // end request(function())
         ); //end Magicseaweed request
         this.MAGICfetcherRunning = false;
@@ -213,7 +225,28 @@ module.exports = NodeHelper.create({
     socketNotificationReceived: function(notification, payload) {
             var self = this;
             var apiMessage = "";
-            if (notification === 'GET_NOAA') {
+            if (notification === 'UPDATE_TIMER') {
+                this.config = payload;
+		if (this.started !== true) {
+		      this.started = true;
+		      this.scheduleUpdate();    
+                      if (this.config.debug === 1) {
+	                    apiMessage = moment().format('YYYY-MM-DDHH:mm:ss.SSSZZ') + ' UPDATE: ' + notification + ': Setting update schedule';
+	                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                      }
+		} else {
+                    var self = this;
+                    if (this.config.debug === 1) {
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' UPDATE:  scheduleUpdate already set. Next update at: '+ tempTime.format('YYYY-MM-DD >> HH:mm:ss.SSSZZ');
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    }
+                }
+            } //end UPDATE_TIMER Socket Config
+	    
+	    
+	    
+	    if (notification === 'GET_NOAA' && this.started == false) {
+		    // if we haven't started, go fetch data. Otherwise dont & send cached data back
                 this.config = payload;
                 if (this.config.debug === 1) {
                     apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
@@ -227,10 +260,24 @@ module.exports = NodeHelper.create({
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': NOAAfetcherRunning = ' + this.NOAAfetcherRunning;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                     }
-                }
-            } //end NOAA Socket Config
+                } // end get live data if clause
+            } else if (notification === 'GET_NOAA' && this.started == true) {
+		    //send cached NOAA data back to module for new client to load
+		self.sendSocketNotification('LAST_UPDATED', sendCachedTime); //send notification back to MMM-Surf.js to set update time
 
-            if (notification === 'GET_MAGIC') {
+		    if (this.config.debug === 1) {
+                    	apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data: NOAA_WATERTEMP'};
+                    	self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+		    	self.sendSocketNotification('NOAA_WATERTEMP', NOAATempPayload); // send previously fetched data
+	            if (this.config.debug === 1) {
+	            	apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data: NOAA_TIDE_DATA'};
+	            	self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    	self.sendSocketNotification('NOAA_TIDE_DATA', NOAATidePayload); // send previously fetched data		
+					
+	    }    //end NOAA Socket Config
+	
+            if (notification === 'GET_MAGIC' && this.started == false) {
+		    // if we haven't started, go fetch data. Otherwise dont & send cached data back
                 this.config = payload;
                 if (this.config.debug === 1) {
                     apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
@@ -244,16 +291,24 @@ module.exports = NodeHelper.create({
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': MAGICfetcherRunning = ' + this.MAGICfetcherRunning;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                     }
+                } //end get live data if clause
+            } else if (notification === 'GET_MAGIC' && this.started == true) {
+		    //send cached Magicseaweed data back to module for new client to load
+                if (this.config.debug === 1) {
+                    apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data';
+                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    self.sendSocketNotification('MAGICSEAWEED', magicseaweed); //send previously fetched data
                 }
-            } //end Magicseaweed Socket config
+	    } //end Magicseaweed Socket config
 
-            if (notification === 'GET_WUNDERGROUND') {
+            if (notification === 'GET_WUNDERGROUND' && this.started == false) {
+		    // if we haven't started, go fetch data. Otherwise dont & send cached data back
                 this.config = payload;
                 if (this.config.debug === 1) {
                     apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
                     self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                 }
-                if (!this.WufetcherRunnin) {
+                if (!this.WufetcherRunning) {
                     this.fetchWunderground();
                 } else {
                     var self = this;
@@ -261,8 +316,16 @@ module.exports = NodeHelper.create({
                         apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                     }
-                }
-            } //end Wunderground Socket config
+                } //end get live data if clause
+	    } else if (notification === 'GET_WUNDERGROUND' && this.started == true) {
+		    //send cached Wunderground data back to module for new client to load
+                if (this.config.debug === 1) {
+		        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data';
+	                self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+	                self.sendSocketNotification('WUNDERGROUND', wunderPayload); //send previously fetched data
+               }
+
+	    } //end Wunderground Socket config
         } // end socketNotification
 
 }); //end helper module
