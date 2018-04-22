@@ -14,11 +14,19 @@ Module.register("MMM-Surf", {
     defaults: {
         MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
         MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
-	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" 
+	spotCoast: "",		//what coast the spot sits on values are "N, E, S, W"
+	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" see: https://en.wikipedia.org/wiki/Compass_rose#/media/File:Kompassrose.svg 
 	spotWind: [],		//best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
 	spotSwellMin: "",	//minimum swell size that works at the spot
 	spotSwellMax: "",	//maximum swell size that works at the spot
-        MagicAPI: "",
+        eastSpotBadWinds: ["NNE", "NE", "ENE", "E", "ESE", "SE", "SSE"],
+        westSpotBadWinds: ["SSW", "SW", "WSW", "W", "WNS", "NW", "NNW"],
+        northSpotBadWinds: ["WNW", "NW", "NNW", "N", "NNE", "NE", "ENE"],
+	southSpotBadWinds: ["ESE", "SE", "SSW", "S", "SSE", "SE", "WSW"],
+	greenWindMax: "", //in MPH
+	orangeWindMax: "", //in MPH
+	redWindMax: "", //in MPH
+	MagicAPI: "",
         debug: 0,
         Wuapikey: "",
         WuPWS: "",
@@ -133,7 +141,7 @@ Module.register("MMM-Surf", {
 
     // Import CSS files.
     getStyles: function() {
-        return ["weather-icons.css", "weather-icons-wind.css", "MMM-Surf.css"];
+        return ["weather-icons.css", "weather-icons-wind.css", "font-awesome.css", "MMM-Surf.css"];
     },
 
     // Define start sequence.
@@ -150,9 +158,8 @@ Module.register("MMM-Surf", {
 	this.getNOAA();
 	this.getWunder();
         this.getMagicseaweed();
-	this.updateTimer = null;
+	//this.updateTimer = null;
 	this.lastUpdatedTime = ""; 
-	this.scheduleUpdate();
         this.haveforecast = 0;
     },
 
@@ -169,19 +176,8 @@ Module.register("MMM-Surf", {
     getMagicseaweed: function() {
         if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_MAGIC (1):"); }
         this.sendSocketNotification("GET_MAGIC", this.config);
-	    lastUpdatedTime = moment().format('YYYY-MM-DD >> HH:mm:ssZZ'); //set last update time. 
     }, //end getMagicseaweed function
 
-	scheduleUpdate: function() {
-		var nextload = this.config.updateInterval;
-		var self = this;
-		this.updateTimer = setInterval(function() {
-			if (self.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + "  UPDATE: scheduledUpdate called fetching new data: " + self.config.updateInterval); }
-			self.getNOAA(self);
-			self.getWunder(self);
-			self.getMagicseaweed(self);
-		}, nextload);
-	},
 
     // Override dom generator.
     getDom: function() {
@@ -330,8 +326,13 @@ Module.register("MMM-Surf", {
 
 		//Display Tide Data
 		var TideIcon = document.createElement("td");
-		TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + ".png" + "'>";
-		TideIcon.className = "wi";
+	    	if (this.DeltaPerc >= 0 && this.DeltaPerc <= 33) {
+			TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + "Tide1.png" + "'>";}
+	        if (this.DeltaPerc >= 34 && this.DeltaPerc <= 66) {
+			TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + "Tide2.png" + "'>";}
+		if (this.DeltaPerc >= 67) {
+			TideIcon.innerHTML = "<img src='./modules/MMM-Surf/img/" + this.TideTypeCurrent + "Tide3.png" + "'>";}
+	    	TideIcon.className = "wi";
 		row_watersitrep.appendChild(TideIcon);
 
 		var TideTxt = document.createElement("td");
@@ -395,7 +396,8 @@ Module.register("MMM-Surf", {
 				magicseaweedStarRating.className = "align-center bright weather-icon";
 				icon = document.createElement("span");
 				if (this.magicforecast12hrs[f].rating.length == 0) {
-					icon.className = "wi wi-na";
+					//icon.className = "wi wi-na"; //old NA icon
+					icon.innerHTML = "<span class=\"swellred\"><i class=\"fa fa-times-circle\"></i></span>";	
 				} else {
 					icon.innerHTML = this.magicforecast12hrs[f].rating.join(" ");
 				}
@@ -468,22 +470,66 @@ Module.register("MMM-Surf", {
 				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
 				windInfoCell = document.createElement("i");
-				
+			
 				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
 					//if (this.config.debug === 1) { Log.info("WIND: " + this.magicforecast12hrs[f].windCompassDirection + " / " + this.config.spotWind[i]);}
 						if (this.config.spotWind[i] === this.magicforecast12hrs[f].windCompassDirection) {
-						//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
+						//Wind direction is reported by the direction from which it originates. 
+						//For example, a northerly wind blows from the north to the south.
 						//The arrow displayed will have the small point facing the origin of the wind
 							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellgreen";
 							break;
 					} else {
-							windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection;
-					}
-				} // end wind colorization loop
+						// If statements to pop-color on sideshore and onshore winds determined - roughly - by the spot orientation
+						// if the spot is on the east coast, then any winds coming from the east, blowing west, are on shore and ugly (red)
+						// Wind directions have alreadybeen set in *SpotBadWinds in the config stanza
+                                                if (this.config.spotCoast === "E") {
+                                                                if (this.config.eastSpotBadWinds.indexOf(this.magicforecast12hrs[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+                                                if (this.config.spotCoast === "W") {
+                                                                if (this.config.westSpotBadWinds.indexOf(this.magicforecast12hrs[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+                                                if (this.config.spotCoast === "N") {
+                                                                if (this.config.northSpotBadWinds.indexOf(this.magicforecast12hrs[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+                                                if (this.config.spotCoast === "S") {
+                                                                if (this.config.southSpotBadWinds.indexOf(this.magicforecast12hrs[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecast12hrs[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+                                                } // end else loop
+                                } // end wind colorization loop
+
+
 				windInfo.appendChild(windInfoCell);
 
 				windInfoCell = document.createElement("i");
-				windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast12hrs[f].windGusts + "mph";
+
+                                if (this.magicforecast12hrs[f].windGusts <=this.config.greenWindMax) {
+                                	windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"<span class=\"swellgreen\">Gusts: </span>" +this.magicforecast12hrs[f].windGusts + "mph";
+                                }
+                                if (this.magicforecast12hrs[f].windGusts > this.config.greenWindMax && this.magicforecast12hrs[f].windGusts <= this.config.orangeWindMax) {
+                                         windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"<span class=\"swellorange\">Gusts: </span>" +this.magicforecast12hrs[f].windGusts + "mph";
+                                }
+                                if (this.magicforecast12hrs[f].windGusts >= this.config.redWindMax) {
+                                        windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"<span class=\"swellred\">Gusts: </span>" +this.magicforecast12hrs[f].windGusts + "mph";
+				}
+
+				//windInfoCell.innerHTML = "&nbsp;" + this.magicforecast12hrs[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecast12hrs[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecast12hrs[f].windGusts + "mph";
 				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
 				row_wind.appendChild(windInfo);
@@ -544,7 +590,8 @@ Module.register("MMM-Surf", {
 				magicseaweedStarRating.className = "align-center bright weather-icon";
 				icon = document.createElement("span");
 				if (this.magicforecastDaily[f].rating.length == 0) {
-					icon.className = "wi wi-na";
+					//icon.className = "wi wi-na";
+					icon.innerHTML = "<span class=\"swellred\"><i class=\"fa fa-times-circle\"></i></span>";
 				} else {
 					icon.innerHTML = this.magicforecastDaily[f].rating.join(" ");
 				}
@@ -614,9 +661,7 @@ Module.register("MMM-Surf", {
 				windInfo.appendChild(windInfoCell);
 
 				windInfoCell = document.createElement("i");
-
 				for (i = 0, count = this.config.spotWind.length; i < count; i++) {
-					//Log.info("WIND: " + this.magicforecastDaily[f].windCompassDirection + " / " + this.config.spotWind[i]);
 
 					if (this.config.spotWind[i] === this.magicforecastDaily[f].windCompassDirection) {
 							//Wind direction is reported by the direction from which it originates. For example, a northerly wind blows from the north to the south.
@@ -624,13 +669,51 @@ Module.register("MMM-Surf", {
 							windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellgreen";
 							break;
 					} else {
-							windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection;
-					}
+						// If statements to pop-color on sideshore and onshore winds determined - roughly - by the spot orientation
+						// if the spot is on the east coast, then any winds coming from the east, blowing west, are on shore and ugly (red)
+						// Wind directions have alreadybeen set in *SpotBadWinds in the config stanza
+						if (this.config.spotCoast === "E") {
+								if (this.config.eastSpotBadWinds.indexOf(this.magicforecastDaily[f].windCompassDirection) != -1) {
+									windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellred";
+								} else {
+									windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellorange";
+								}
+							}
+                                                if (this.config.spotCoast === "W") {
+                                                                if (this.config.westSpotBadWinds.indexOf(this.magicforecastDaily[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+                                                if (this.config.spotCoast === "N") {
+                                                                if (this.config.northSpotBadWinds.indexOf(this.magicforecastDaily[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellorange";
+                                                                }
+                                                        }														
+                                                if (this.config.spotCoast === "S") {
+                                                                if (this.config.southSpotBadWinds.indexOf(this.magicforecastDaily[f].windCompassDirection) != -1) {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellred";
+                                                                } else {
+                                                                        windInfoCell.className = "wi wi-wind " + this.magicforecastDaily[f].windDirection + " swellorange";
+                                                                }
+                                                        }
+						} // end else loop
 				} // end wind colorization loop
 				windInfo.appendChild(windInfoCell);
 
 				windInfoCell = document.createElement("i");
-				windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"Gusts: " +this.magicforecastDaily[f].windGusts + "mph";
+				if (this.magicforecastDaily[f].windGusts <=this.config.greenWindMax) {
+				windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"<span class=\"swellgreen\">Gusts: </span>" +this.magicforecastDaily[f].windGusts + "mph";
+				}
+				if (this.magicforecastDaily[f].windGusts > this.config.greenWindMax && this.magicforecastDaily[f].windGusts <= this.config.orangeWindMax) {
+					 windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"<span class=\"swellorange\">Gusts: </span>" +this.magicforecastDaily[f].windGusts + "mph";
+				}
+				if (this.magicforecastDaily[f].windGusts >= this.config.redWindMax) {
+					windInfoCell.innerHTML = "&nbsp;" + this.magicforecastDaily[f].windCompassDirection + "<br>" + "Steady: " + this.magicforecastDaily[f].windSpeed + "mph<br>"  +"<span class=\"swellred\">Gusts: </span>" +this.magicforecastDaily[f].windGusts + "mph";
+				}
 
 				windInfoCell.className = "hour";
 				windInfo.appendChild(windInfoCell);
@@ -672,7 +755,7 @@ Module.register("MMM-Surf", {
 		lastUpdatedCell.setAttribute('style', "display:flex; flex-wrap: nowrap; align-items: center;font-size: 40%");
 	    lastUpdatedCell.setAttribute("colSpan", "10");
 	   // lastUpdatedCell.className = "weathericon";
-	    lastUpdatedCell.innerHTML = "last updated at: " + lastUpdatedTime + "&nbsp; &nbsp; &nbsp; &nbsp;<img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
+	    lastUpdatedCell.innerHTML = "last updated at: " + this.lastUpdatedTime + "&nbsp; &nbsp; &nbsp; &nbsp;<img src='https://im-5.msw.ms/md/themes/msw_built/3/i/logo.png'>";
 	    row_lastUpdated.appendChild(lastUpdatedCell);
 	    table_lastUpdated.appendChild(row_lastUpdated);
 	    wrapper.appendChild(table_lastUpdated);
@@ -1085,13 +1168,16 @@ Module.register("MMM-Surf", {
                 this.rating = [];
                 // Loop the solid rating on a single forecast object.
                 for (var j = 0; j < this.solidRating; j++) {
-                    this.rating.push('<img src="http://cdnimages.magicseaweed.com/star_filled.png" />');
-                }
+                   // this.rating.push('<img src="http://cdnimages.magicseaweed.com/star_filled.png" />');
+			this.rating.push('<span class=\"swellgreen\"><i class="fa fa-small fa-star"></i></span>');
+		}
 
                 // Loop the faded rating on a single forecast object.
                 for (var j = 0; j < this.fadedRating; j++) {
-                    this.rating.push('<img src="http://cdnimages.magicseaweed.com/star_empty.png" />');
-                }
+                    //this.rating.push('<img src="http://cdnimages.magicseaweed.com/star_empty.png" />');
+                        //this.rating.push('<span class=\"swellblue\"><i class="fa fa-small fa-star-o"></i></span>'); //Star outline
+			this.rating.push('<span class=\"swellorange\"><i class="fa fa-small fa-star"></i></span>');
+		}
                 // PROCESS SWELL INFO
                 // set Multiple swell flag (indicator for viewer to goto site)
                 this.swellCount = Object.keys(data[i].swell.components).length;
@@ -1271,6 +1357,42 @@ Module.register("MMM-Surf", {
         }
     },
 
+	cardinalOpposite: function(card) {
+        if (card === "NNE") {
+            return "SSW";
+        } else if (card === "NE") {
+            return "SW";
+        } else if (card === "ENE") {
+            return "WSW";
+        } else if (card === "E") {
+            return "W";
+        } else if (card === "ESE") {
+            return "WNW";
+        } else if (card === "SE") {
+            return "NW";
+        } else if (card === "SSE") {
+            return "NNW";
+        } else if (card === "S") {
+            return "N";
+        } else if (card === "SSW") {
+            return "NNE";
+        } else if (card === "SW") {
+            return "NE";
+        } else if (card === "WSW") {
+            return "ENE";
+        } else if (card === "W") {
+            return "E";
+        } else if (card === "WNW") {
+            return "ESE"; //ORANGE
+        } else if (card === "NW") {
+            return "SE"; //ORANGE
+        } else if (card === "NNW") {
+            return "SSE"; // ORANGE
+        } else {
+            return "S";
+        }
+    },
+
     /* function(temperature)
      * Rounds a temperature to 1 decimal.
      *
@@ -1296,15 +1418,24 @@ Module.register("MMM-Surf", {
             }
             if (notification === 'NOAA_WATERTEMP') {
                 if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
-                self.processNOAA_WATERTEMP(JSON.parse(payload));
+		Log.info(payload);
+		    self.processNOAA_WATERTEMP(JSON.parse(payload));
             }
             if (notification === 'MAGICSEAWEED') {
                 if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processMAGICSEAWEED(JSON.parse(payload));
+		    	if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): UPDATE_TIMER"); }
+		    	this.sendSocketNotification("UPDATE_TIMER", this.config);
+		    
             }
             if (notification === 'HELPER_MESSAGE') {
                 if (this.config.debug === 1) { Log.info(payload); }
-            }
+		}
+	    if (notification === 'LAST_UPDATED') {
+		this.lastUpdatedTime = payload; //set last update time.
+		if (this.config.debug === 1) {Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (8): ' + notification + ' ' +this.lastUpdatedTime);
+		}
+	    }
 
         } // end socketNotificationReceived function
 
