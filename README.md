@@ -11,7 +11,7 @@ The surf forecast data is minimized from the normal Magicseaweed interface to fo
 To get MMM-Surf up and running, you will need to do some scouting.
 
 
-* [Wunderground API key](https://www.wunderground.com/weather/api/d/pricing.html)
+* [DarkySky API key](https://darksky.net/dev)
 
 * [Magicseaweed API key](https://magicseaweed.com/developer/api)
 
