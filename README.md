@@ -1,6 +1,6 @@
 # MMM-Surf
 
-MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather, tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA).
+MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather (DarkySky), tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). I am actively searching international data sources for tide and water temps, please open an issue if you know of sources that provide publicly accessible APIs.
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The [Magicseaweed star rating system](https://magicseaweed.com/help/forecast-table/star-rating), height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
@@ -37,23 +37,11 @@ Find the closest measuring station to your spot. Click the map pin to open the d
 
 ![image](https://user-images.githubusercontent.com/9799911/33579008-504e3b70-d916-11e7-9911-679720264106.png)
 
-3. Wunderground Location for WuPWS config item. Multiple acceptable formats can be accepted:
-* CA/San_Francisco - US state/city	
-* 60290 - US zipcode
-* Australia/Sydney - country/city
-* KJFK - airport code
-* pws:KCASANFR70 - Personal Weather Station id
-
-I prefer the pws:STATIONID format as it can provide hyper localized conditions for a particular spot; however, be warned that Personal Weather Stations vary in quality. 
-
-To find a PWS ID:
-* [Search Wunderground](https://www.wunderground.com/) for a major city name
-* Next to the City name there is a "CHANGE" menu item
-* Zoom around on the map to find the closest weather station and note the ID in parenthesis
-* If we wanted to use Kelly's Cove @ Ocean Beach, our config item would be pws:KCASANFR99 for the example below
-
-
-![image](https://user-images.githubusercontent.com/9799911/33579383-a7cc39d2-d917-11e7-8133-4de5b43f9833.png)
+3. DarkySky Latitude and Longtitude config items. 
+[Search DarkySky](https://darksky.net/) for the area you want a current weather forecast
+* Once found, look at the URL: `https://darksky.net/forecast/37.7661,-122.5107/us12/en` (SF example)
+* After /forecast/ you can find the values you need for "Latitude, Longtitude"
+* Copy each value (exclude the comma) into appropriate config elements: DarkySkyLat and DarkySkyLong
 
 
 ```
@@ -61,28 +49,26 @@ module: "MMM-Surf",
 debug: "0",
 position: "top_left",
 config: {
+        MagicAPI: "",                   //REQUIRED: magicseaweed API Key
         MagicSeaweedSpotID: "",         //REQUIRED: numeric spot ID from magicseaweed, e.g. "390"
         MagicSeaweedSpotName: "",       //REQUIRED: shorthand name for your spot...(e.g. Secret Spot, Lowers, Ocean Beach, OCNJ)
+	spotCoast: "", 			//REQUIRED: N,E,S.W orientation of the coast line
         spotSwellHold: [],      	//OPTIONAL: Best swell direction that your spot handles. Accepts multiple cardinal directions, e.g. ["N"] or ["S","SSW","ESE"]
         spotWind: [],          		//OPTIONAL: Best wind direction for spot. Accepts multiple cardinal directions, e.g. ["N"] or["S","SSW","ESE"]
 	spotSwellMin: "",       	//OPTIONAL: Define minimum swell size that works at the spot, e.g. "3"
         spotSwellMax: "",       	//OPTIONAL: Define maximum swell size that works at the spot, e.g. "10"
-        MagicAPI: "",                   //REQUIRED: magicseaweed API Key
+	greenWindMax: "10", 		//REQUIRED: Upper end of acceptable winds (in MPH)
+	orangeWindMax: "20", 		//REQUIRED: Upper end of "I can deal with this" winds (in MPH)
+	redWindMax: "21", 		//REQUIRED: Low end of "Oh hell no" winds (in MPH)
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
-        Wuapikey: "",                   //REQUIRED: Wunderground API
-        WuPWS: "",                      //REQUIRED: Wunderground Location, e.g. "pws:KCASANFR99" or "CA/San_Francisco" or "60290" or "PHL"
         noaatz: "lst_ldt",              //NOAA time zone requests. Local Standard Time / Daylight time.
-        hourly: "1",
-        fctext: "1",
-        fcdaycount: "4",
-        fcdaystart: "0",
-        hourlyinterval: "3",
-        hourlycount: "2",
-        alerttime: "10000",
-        alerttruncatestring: "english:",
+	DarkSkyAPI: "",			//REQUIRED: DarkSky API Key
+	DarkySkyLat: "",		//REQUIRED: DarkSky Latitude
+	DarkySkyLong: "",		/?REQUIRED: DarkSky Longtitude
         roundTmpDecs: "1",
         UseCardinals: "0",
-        layout: "horizontal"
+        layout: "horizontal",
+	debug: 0			//OPTIONAL: If having problems, turn this to 1 and look @ dev console in browser for verbose messages
         }
 },
 ```
