@@ -16,9 +16,9 @@ var tempTime = "";
 module.exports = NodeHelper.create({
     start: function() {
         console.log(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' MMM-Surf helper started ...');
-        //Wunderground Forecast
-        this.WufetcherRunning = false;
-        this.wunderPayload = "";
+	//DarkSky Forecast
+	this.DSfetcherRunning = false;
+	this.DSPayload = "";
         //NOAA Water Temp and Tides
         this.NOAAfetcherRunning = false;
         this.NOAATidePayload = "";
@@ -45,7 +45,7 @@ module.exports = NodeHelper.create({
 				self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
 			}
 			self.fetchNOAAData(self);
-			self.fetchWunderground(self);
+			self.fetchDarkSky(self);
 			self.fetchMagicseaweedData(self);
 			tempTime = moment();
 			tempTime.add(nextload, 'ms');
@@ -53,53 +53,52 @@ module.exports = NodeHelper.create({
 	}, nextload); //define update setInterval timer
 }, //end scheduleUpdate function
 
-    /* 
-     * build Wunderground API request
-     * Original code from RedNax's MMM-Wunderground module
-     *
+    /*
+     * build DarkSky API request
+     * 
      */
-    fetchWunderground: function() {
+    fetchDarkSky: function() {
         var self = this;
-        this.WufetcherRunning = true;
+        this.DSfetcherRunning = true;
         var apiMessage = "";
 
         var wulang = this.config.lang.toUpperCase();
         if (wulang == "DE") {
             wulang = "DL";
         }
-        var Wurl = encodeURI(this.config.WuapiBase + this.config.Wuapikey + "/conditions/hourly/forecast10day/astronomy/alerts/lang:" + wulang + "/q/" + this.config.WuPWS + ".json");
+        var DarkSkyURL = encodeURI(this.config.DarkSkyAPIBase + this.config.DarkSkyAPI + "/" + this.config.DarkSkyLat + "," + this.config.DarkSkyLong);
 
         if (this.config.debug === 1) {
-            apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " HELPER: Wunderground Data API REQUEST (3):  " + Wurl;
+            apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " HELPER: DarkSky Data API REQUEST (3):  " + DarkSkyURL;
             self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
         }
         request({
-                url: Wurl,
+                url: DarkSkyURL,
                 method: 'GET'
             },
             function(error, response, body) {
 
                 if (!error && response.statusCode == 200) {
-                    //this.wunderPayload = body;
-			wunderPayload = body;
-			//for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
+                    //this.DSPayload = body;
+                        DSPayload = body;
+                        //for some reason, when inside function(error, response, body) we lose the ability to see this.config.debug...
                     //but with declaration of self = this...we change to self.config.debug et voila.
                     if (self.config.debug === 1) {
-                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + '  HELPER: Wunderground Data API RESPONSE (4): Received';
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + '  HELPER: DarkSky Data API RESPONSE (4): Received';
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
-                    self.sendSocketNotification('WUNDERGROUND', body);
+                    self.sendSocketNotification('DARKSKY', body);
                 } else {
                     if (self.config.debug === 1) {
-                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + '  HELPER: Wunderground Data API ERROR (5):  ' + error;
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + '  HELPER: DarkSky Data API ERROR (5):  ' + error;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
                     }
                 }
             } // end request(function())
         ); // end request()
-        this.WufetcherRunning = false; // turn our running flag off.
+        this.DSfetcherRunning = false; // turn our running flag off.
 
-    }, //end fetchWunderground
+    }, //end fetchDarkSky
 
     /* 
      * 
@@ -301,31 +300,33 @@ module.exports = NodeHelper.create({
                 }
 	    } //end Magicseaweed Socket config
 
-            if (notification === 'GET_WUNDERGROUND' && this.started == false) {
-		    // if we haven't started, go fetch data. Otherwise dont & send cached data back
+            if (notification === 'GET_DARKSKY' && this.started == false) {
+                    // if we haven't started, go fetch data. Otherwise dont & send cached data back
                 this.config = payload;
                 if (this.config.debug === 1) {
                     apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
                     self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                 }
-                if (!this.WufetcherRunning) {
-                    this.fetchWunderground();
+                if (!this.DSfetcherRunning) {
+                    this.fetchDarkSky();
                 } else {
                     var self = this;
                     if (this.config.debug === 1) {
-                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': WufetcherRunning = ' + this.WufetcherRunning;
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': DSfetcherRunning = ' + this.DSfetcherRunning;
                         self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
                     }
                 } //end get live data if clause
-	    } else if (notification === 'GET_WUNDERGROUND' && this.started == true) {
-		    //send cached Wunderground data back to module for new client to load
+            } else if (notification === 'GET_DARKSKY' && this.started == true) {
+                    //send cached DarkSky data back to module for new client to load
                 if (this.config.debug === 1) {
-		        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data';
-	                self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
-	                self.sendSocketNotification('WUNDERGROUND', wunderPayload); //send previously fetched data
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                        self.sendSocketNotification('DARKSKY', DSPayload); //send previously fetched data
                }
 
-	    } //end Wunderground Socket config
+            } //end DARKSKY Socket config
+
+
         } // end socketNotification
 
 }); //end helper module

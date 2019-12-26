@@ -48,7 +48,7 @@ Find the closest measuring station to your spot. Click the map pin to open the d
 
 ```
 module: "MMM-Surf",
-debug: "0",
+debug: "0",				//OPTIONAL: Default 0 (off). Turn to 1 if experiencing issues and watch the web browser dev console.
 position: "top_left",
 config: {
         MagicAPI: "",                   //REQUIRED: magicseaweed API Key
@@ -98,4 +98,5 @@ This project is licensed under the Creative Commons Attribution-NonCommercial 4.
 * **Xinh Studio** - *High and Low Tid Icons by Xinh Studio from the Noun Project* - [Xinh Studio](https://thenounproject.com/xinhstudio/)
 * **Erik Flowers** - *Weather Icons Project* - [Weather Icons](https://erikflowers.github.io/weather-icons/)
 * **RedNax 67** - *Magic Mirror Wunderground Module that served as layout inspiration and provided some code direction* - [RedNax67's MMM-Wunderground module](https://github.com/RedNax67/MMM-WunderGround)
+
 

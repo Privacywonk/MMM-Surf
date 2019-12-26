@@ -1,41 +1,56 @@
 /* global Module */
 /* Magic Mirror
  * Module: MMM-Surf 
- * Forked from RedNax's MMM-Wunderground module
  * By PrivacyWonk 
  * CC BY-NC 4.0 Licensed.
  */
 
-//var WaterTemp = null;
 
 Module.register("MMM-Surf", {
 
     // Default module config.
     defaults: {
+        debug: 0,        //Debug is turned off by default
+	// Magicseaweed API Configuration
+        MagicSeaweedAPIBase: "http://magicseaweed.com/api/",
+        forecastEndpoint: "/forecast/?spot_id=",
+	//Surf forecast (Magicseaweed) variables
+        MagicAPI: "",           //MagicSeaweed API Key
         MagicSeaweedSpotID: "", //spot ID from magic seaweed URL (e.g. 319 from http://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/)
         MagicSeaweedSpotName: "", // shorthand name for your spot...e.g. Secret Spot / Lowers / The End / etc
-	spotCoast: "",		//what coast the spot sits on values are "N, E, S, W"
-	spotSwellHold: [],	//best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" see: https://en.wikipedia.org/wiki/Compass_rose#/media/File:Kompassrose.svg 
-	spotWind: [],		//best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
-	spotSwellMin: "",	//minimum swell size that works at the spot
-	spotSwellMax: "",	//maximum swell size that works at the spot
+        spotCoast: "",          //what coast the spot sits on values are "N, E, S, W"
+        spotSwellHold: [],      //best swell direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE" see: https://en.wikipedia.org/wiki/Compass_rose#/media/File:Kompassrose.svg
+        spotWind: [],           //best wind direction for spot. Accepts multiple cardinal directions, e.g. "N","S","SSW","ESE"
+        spotSwellMin: "",       //minimum swell size that works at the spot
+        spotSwellMax: "",       //maximum swell size that works at the spot
+            // Define wind directions that are bad for a spot. E.g. if east coast spot, winds blowing E->W are bad / onshore or N<->S are sideshore.)
         eastSpotBadWinds: ["NNE", "NE", "ENE", "E", "ESE", "SE", "SSE"],
         westSpotBadWinds: ["SSW", "SW", "WSW", "W", "WNS", "NW", "NNW"],
         northSpotBadWinds: ["WNW", "NW", "NNW", "N", "NNE", "NE", "ENE"],
-	southSpotBadWinds: ["ESE", "SE", "SSW", "S", "SSE", "SE", "WSW"],
-	greenWindMax: "", //in MPH
-	orangeWindMax: "", //in MPH
-	redWindMax: "", //in MPH
-	MagicAPI: "",
-        debug: 0,
-        Wuapikey: "",
-        WuPWS: "",
+        southSpotBadWinds: ["ESE", "SE", "SSW", "S", "SSE", "SE", "WSW"],
+            // define wind thresholds. less than green max, between green and orange max, greater than red wind speeds
+        greenWindMax: "", //in MPH
+        orangeWindMax: "", //in MPH
+        redWindMax: "", //in MPH
+	//----------------------------------------
+        //Dark Sky Base API URL
+        DarkSkyAPIBase: "https://api.darksky.net/forecast/",
+		// DarkSky variables
+        DarkSkyAPI: "",         //API key for DarkSky from darksky.net
+        DarkSkyLat: "",         //Latitude for forecast
+        DarkSkyLong: "",        //Longtitude for forecast
+	//-----------------------------------------
+	// NOAA API Configuration
+        NOAAapiBase: "https://tidesandcurrents.noaa.gov/api/",
+		//NOAA Variables
         station_id: "", //Numeric station ID from NOAA
         noaatz: "", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
+	//----------------------------------------
+	//Other variables
         units: config.units,
         windunits: "bft", // choose from mph, bft
-	updateInterval: 30*60*1000, // conversion to milliseconds (Minutes * 60 Seconds * 1000). Only change minutes. Be kind, don't hammer APIs.
-	animationSpeed: 1000,
+        updateInterval: 30*60*1000, // conversion to milliseconds (Minutes * 60 Seconds * 1000). Only change minutes. Be kind, don't hammer APIs.
+        animationSpeed: 1000,
         timeFormat: config.timeFormat,
         lang: config.language,
         showWindDirection: true,
@@ -44,13 +59,6 @@ Module.register("MMM-Surf", {
         roundTmpDecs: 1,
         iconset: "VCloudsWeatherIcons",
         retryDelay: 2500,
-        //Wunderground API Base
-        WuapiBase: "http://api.wunderground.com/api/",
-        // Magicseaweed API Configuration
-        MagicSeaweedAPIBase: "http://magicseaweed.com/api/",
-        forecastEndpoint: "/forecast/?spot_id=",
-        // NOAA API Configuration
-        NOAAapiBase: "https://tidesandcurrents.noaa.gov/api/",
         iconTableDay: {
             "chanceflurries": "wi-day-snow-wind",
             "chancerain": "wi-day-showers",
@@ -156,9 +164,8 @@ Module.register("MMM-Surf", {
         this.error = false;
         this.errorDescription = "";
 	this.getNOAA();
-	this.getWunder();
-        this.getMagicseaweed();
-	//this.updateTimer = null;
+	this.getDarkSky();
+	this.getMagicseaweed();
 	this.lastUpdatedTime = ""; 
         this.haveforecast = 0;
     },
@@ -168,10 +175,10 @@ Module.register("MMM-Surf", {
         this.sendSocketNotification("GET_NOAA", this.config);
     }, //end getNOAA function
 
-    getWunder: function() {
-        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_WUNDERGROUND (1):"); }
-        this.sendSocketNotification("GET_WUNDERGROUND", this.config);
-    }, //end GetWunder
+    getDarkSky: function() {
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_DARKSKY (1):"); }
+        this.sendSocketNotification("GET_DARKSKY", this.config);
+    }, //end getDarkSky
 
     getMagicseaweed: function() {
         if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_MAGIC (1):"); }
@@ -194,7 +201,7 @@ Module.register("MMM-Surf", {
         var currentStep;
         var steps;
 
-        if (this.config.Wuapikey === "") {
+        if (this.config.DarkSkyAPI === "") {
             wrapper.innerHTML = this.translate("APIKEY") + this.name + ".";
             wrapper.className = "dimmed light small";
             return wrapper;
@@ -279,7 +286,8 @@ Module.register("MMM-Surf", {
 		row_sitrep.appendChild(sunriseSunsetTxt);
 
 		var moonPhaseIcon = document.createElement("td");
-		moonPhaseIcon.innerHTML = this.moonPhaseIcon;
+		//moonPhaseIcon.innerHTML = this.moonPhaseIcon;
+		moonPhaseIcon.className = "wi " + this.moonPhaseIcon;
 		row_sitrep.appendChild(moonPhaseIcon);
 
 		//close current weather conditions row (top)
@@ -766,21 +774,21 @@ Module.register("MMM-Surf", {
 
     /* processWeather(data)
      * 
-     * Processes Wunderground data for current conditions data only. 
+     * Processes DarkSky data for current conditions data only. 
      * this feeds the first row of icons
      */
 
     processWeather: function(data) {
         if (this.config.debug === 1) { Log.info(data); } //print Object to browser console
-        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: Wunderground (6)") };
-        if (data.current_observation.estimated.hasOwnProperty("estimated") && this.haveforecast == 1) {
-            if (this.config.debug === 1) { console.log("WeatherUnderground served us an estimated forecast. Skipping update..."); }
-            return;
-        }
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: DarkSky (6)") };
+        //if (data.currently.estimated.hasOwnProperty("estimated") && this.haveforecast == 1) {
+        //    if (this.config.debug === 1) { console.log("WeatherUnderground served us an estimated forecast. Skipping update..."); }
+        //    return;
+        //}
 
         this.haveforecast = 1;
 
-        if (data.response.hasOwnProperty("error")) {
+        if (data.flags.hasOwnProperty("darksky-unavailable")) {
             this.errorDescription = data.response.error.description;
             this.error = true;
             this.updateDom(this.config.animationSpeed);
@@ -790,17 +798,18 @@ Module.register("MMM-Surf", {
             var i;
             var count;
             var iconTable = this.config.iconTableDay;
-            this.alerttext = "";
-            this.alertmsg = "";
             var sunrise = new Date();
-            this.sunrhour = Number(data.sun_phase.sunrise.hour);
-            sunrise.setHours(data.sun_phase.sunrise.hour);
-            sunrise.setMinutes(data.sun_phase.sunrise.minute);
+	    this.sunrise=data.daily.data[0].sunriseTime;
+
+//            this.sunrhour = Number(data.daily.data[0].sunriseTime);
+//            sunrise.setHours(data.daily.data[0].sunriseTime.sunrise.hour);
+//            sunrise.setMinutes(data.daily.data[0].sunriseTime.sunrise.minute);
 
             var sunset = new Date();
-            this.sunshour = Number(data.sun_phase.sunset.hour);
-            sunset.setHours(data.sun_phase.sunset.hour);
-            sunset.setMinutes(data.sun_phase.sunset.minute);
+	    this.sunset = data.daily.data[0].sunsetTime;
+//            this.sunshour = Number(data.daily.data[0].sunsetTime.sunset.hour);
+//            sunset.setHours(daily.data[0].sunsetTime.sunset.hour);
+//            sunset.setMinutes(data.daily.data[0].sunsetTime.sunset.minute);
 
             // The moment().format("h") method has a bug on the Raspberry Pi.
             // So we need to generate the timestring manually.
@@ -828,34 +837,30 @@ Module.register("MMM-Surf", {
                 .iconTableDay : this.config.iconTableNight;
 
 
-            this.weatherType = this.iconTable[data.current_observation.icon];
-            this.windDirection = this.deg2Cardinal(data.current_observation.wind_degrees);
-            this.windDirectionTxt = data.current_observation.wind_dir;
-            this.Humidity = data.current_observation.relative_humidity;
-            this.Humidity = this.Humidity.substring(0, this.Humidity.length - 1);
-            this.windSpeed = "wi-wind-beaufort-" + this.ms2Beaufort(data.current_observation.wind_kph);
-            this.windSpeedMph = data.current_observation.wind_mph;
-            this.moonPhaseIcon = "<img class='moonPhaseIcon' src='https://www.wunderground.com/graphics/moonpictsnew/moon" + data.moon_phase.ageOfMoon + ".gif'>";
+            this.weatherType = this.iconTable[data.currently.icon];
+            this.windDirection = this.deg2Cardinal(data.currently.windBearing);
+            this.windDirectionTxt = data.currently.windBearing;
+            this.Humidity = data.currently.humidity*100; 
+            this.windSpeed = "wi-wind-beaufort-" + this.ms2Beaufort(data.currently.windSpeed);
+            this.windSpeedMph = data.currently.windSpeed;
+	    this.moonPhaseIcon = this.moon_icon(data.daily.data[0].moonPhase);
 
             if (this.config.units == "metric") {
-                this.temperature = data.current_observation.temp_c;
+                this.temperature = data.currently.temp_c;
                 var fc_text = data.forecast.txt_forecast.forecastday[0].fcttext_metric.replace(/(.*\d+)(C)(.*)/gi, "$1°C$3");
             } else {
-                this.temperature = data.current_observation.temp_f;
-                var fc_text = data.forecast.txt_forecast.forecastday[0].fcttext;
+                this.temperature = data.currently.temperature;
+                var fc_text = data.currently.summary;
             }
 
             this.temperature = this.roundValue(this.temperature);
-            this.weatherTypeTxt = "<img src='./modules/MMM-WunderGround/img/" + this.config.iconset + "/" +
-                data.current_observation.icon_url.replace('http://icons.wxug.com/i/c/k/', '').replace('.gif', '.png') +
-                "' style='vertical-align:middle' class='currentWeatherIcon'>";
 
             this.loaded = true;
             this.updateDom(this.config.animationSpeed);
-            if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering Wunderground data to UI (7)'); }
+            if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering DarkSky data to UI (7)'); }
             if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
         } //end if/else clause
-    }, //end processWunderground
+    }, //end processWeather
 
     /* processNOAA_TIDE_DATA(data)
      *
@@ -1321,6 +1326,68 @@ Module.register("MMM-Surf", {
      * 
      */
 
+     moon_icon: function(moon_phase) {
+        if (moon_phase >= 0 && moon_phase < 0.036) {
+                return "wi-moon-new";
+        } else if (moon_phase >= 0.036 && moon_phase < 0.071) {
+                return "wi-moon-waxing-crescent-1";
+        } else if (moon_phase >= 0.71 && moon_phase < 0.107) {
+                return "wi-moon-waxing-crescent-2";
+        } else if (moon_phase >= 0.107 && moon_phase < 0.143) {
+                return "wi-moon-waxing-crescent-3";
+        } else if (moon_phase >= 0.143 && moon_phase < 0.179) {
+                return "wi-moon-waxing-crescent-4";
+        } else if (moon_phase >= 0.179 && moon_phase < 0.214) {
+                return "wi-moon-waxing-crescent-5";
+        } else if (moon_phase >= 0.214 && moon_phase < 0.250) {
+                return "wi-moon-waxing-crescent-6";
+        } else if (moon_phase >= 0.250 && moon_phase < 0.286) {
+                return "wi-moon-first-quarter";
+        } else if (moon_phase >= 0.286 && moon_phase < 0.321) {
+                return "wi-moon-waxing-gibbous-1";
+        } else if (moon_phase >= 0.321 && moon_phase < 0.357) {
+                return "wi-moon-waxing-gibbous-2";
+        } else if (moon_phase >= 0.357 && moon_phase < 0.393) {
+                return "wi-moon-waxing-gibbous-3";
+        } else if (moon_phase >= 0.393 && moon_phase < 0.429) {
+                return "wi-moon-waxing-gibbous-4";
+        } else if (moon_phase >= 0.429 && moon_phase < 0.464) {
+                return "wi-moon-waxing-gibbous-5";
+        } else if (moon_phase >= 0.464 && moon_phase < 0.500) {
+                return "wi-moon-waxing-gibbous-6";
+        } else if (moon_phase >= 0.500 && moon_phase < 0.536) {
+                return "wi-moon-full";
+        } else if (moon_phase >= 0.536 && moon_phase < 0.571) {
+                return "wi-moon-waning-gibbous-1";
+        } else if (moon_phase >= 0.571 && moon_phase < 0.607) {
+                return "wi-moon-waning-gibbous-2";
+        } else if (moon_phase >= 0.607 && moon_phase < 0.643) {
+                return "wi-moon-waning-gibbous-3";
+        } else if (moon_phase >= 0.643 && moon_phase < 0.679) {
+                return "wi-moon-waning-gibbous-4";
+        } else if (moon_phase >= 0.679 && moon_phase < 0.714) {
+                return "wi-moon-waning-gibbous-5";
+        } else if (moon_phase >= 0.714 && moon_phase < 0.750) {
+                return "wi-moon-waning-gibbous-6";
+        } else if (moon_phase >= 0.750 && moon_phase < 0.786) {
+                return "wi-moon-third-quarter";
+        } else if (moon_phase >= 0.786 && moon_phase < 0.821) {
+                return "wi-moon-waning-crescent-1";
+        } else if (moon_phase >= 0.821 && moon_phase < 0.857) {
+                return "wi-moon-waning-crescent-2";
+        } else if (moon_phase >= 0.857 && moon_phase < 0.893) {
+                return "wi-moon-waning-crescent-3";
+        } else if (moon_phase >= 0.893 && moon_phase < 0.929) {
+                return "wi-moon-waning-crescent-4";
+        } else if (moon_phase >= 0.929 && moon_phase < 0.964) {
+                return "wi-moon-waning-crescent-5";
+        } else if (moon_phase >= 0.964 && moon_phase < 1.000) {
+                return "wi-moon-waning-crescent-6";	
+	} else {
+		return "out-of-bounds";
+	}
+     },
+
     deg2Cardinal: function(deg) {
         if (deg > 11.25 && deg <= 33.75) {
             return "wi-from-nne";
@@ -1408,7 +1475,7 @@ Module.register("MMM-Surf", {
     socketNotificationReceived: function(notification, payload) {
             var self = this;
 
-            if (notification === 'WUNDERGROUND') {
+            if (notification === 'DARKSKY') {
                 if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processWeather(JSON.parse(payload));
             }
