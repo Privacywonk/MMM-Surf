@@ -30,7 +30,9 @@ git clone https://github.com/Privacywonk/MMM-Surf
 
 ## Config 
 You will need to source a few bits of information to configure the MMM-Surf module:
-1. Magicseaweed spot ID for the MagicSeaweedSpotID config item. For example, 391 from https://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/
+1. Magicseaweed spot ID for the MagicSeaweedSpotID config item. For example, 391 from https://magicseaweed.com/Ocean-City-NJ-Surf-Report/391/. 
+* MagicSeaweed will have commentary about the spot. Look for "About <<spot name>>" and "Stormrider Surf Guide", e.g. What swell direction works well, ideal wind conditions, ideal, min, and max swell. Make note of this for configuration items below.
+* 
 
 2. [NOAA Tide and Current](https://tidesandcurrents.noaa.gov) for the station_id config item
 Find the closest measuring station to your spot. Click the map pin to open the details of the station. Copy the station_id number that appears before the location. 9415020 for the point Reyes, CA example below.
