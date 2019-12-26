@@ -1,6 +1,6 @@
 # MMM-Surf
 
-MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather (DarkySky), tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). I am actively searching international data sources for tide and water temps, please open an issue if you know of sources that provide publicly accessible APIs.
+MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather (DarkSky), tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). I am actively searching international data sources for tide and water temps, please open an issue if you know of sources that provide publicly accessible APIs.
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The [Magicseaweed star rating system](https://magicseaweed.com/help/forecast-table/star-rating), height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
 
@@ -11,7 +11,7 @@ The surf forecast data is minimized from the normal Magicseaweed interface to fo
 To get MMM-Surf up and running, you will need to do some scouting.
 
 
-* [DarkySky API key](https://darksky.net/dev)
+* [DarkSky API key](https://darksky.net/dev)
 
 * [Magicseaweed API key](https://magicseaweed.com/developer/api)
 
@@ -39,11 +39,11 @@ Find the closest measuring station to your spot. Click the map pin to open the d
 
 ![image](https://user-images.githubusercontent.com/9799911/33579008-504e3b70-d916-11e7-9911-679720264106.png)
 
-3. DarkySky Latitude and Longtitude config items. 
-[Search DarkySky](https://darksky.net/) for the area you want a current weather forecast
+3. DarkSky Latitude and Longtitude config items. 
+[Search DarkSky](https://darksky.net/) for the area you want a current weather forecast
 * Once found, look at the URL: `https://darksky.net/forecast/37.7661,-122.5107/us12/en` (SF example)
 * After /forecast/ you can find the values you need for "Latitude, Longtitude"
-* Copy each value (exclude the comma) into appropriate config elements: DarkySkyLat and DarkySkyLong
+* Copy each value (exclude the comma) into appropriate config elements: DarkSkyLat and DarkSkyLong
 
 
 ```
@@ -65,8 +65,8 @@ config: {
         station_id: "",                 //REQUIRED: NOAA Tide and Currents monitoring, e.g. 9415020 for Point Reyes
         noaatz: "lst_ldt",              //NOAA time zone requests. Local Standard Time / Daylight time.
 	DarkSkyAPI: "",			//REQUIRED: DarkSky API Key
-	DarkySkyLat: "",		//REQUIRED: DarkSky Latitude
-	DarkySkyLong: "",		/?REQUIRED: DarkSky Longtitude
+	DarkSkyLat: "",		//REQUIRED: DarkSky Latitude
+	DarkSkyLong: "",		/?REQUIRED: DarkSky Longtitude
         roundTmpDecs: "1",
         UseCardinals: "0",
         layout: "horizontal",
