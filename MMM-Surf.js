@@ -46,6 +46,10 @@ Module.register("MMM-Surf", {
         station_id: "", //Numeric station ID from NOAA
         noaatz: "", // gmt, lst, lst_ldt (Local Standard Time or Local Daylight Time) of station
 	//----------------------------------------
+	//NOAA Global Sea Surface Temperature (SST)
+	noaaGlobalSSTBase: "https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncepRtofsG2DNowDailyProg_LonPM180.jsonlKVP?sst",
+	sstLatitude: "",		//Latittude for Sea Surface Temperature
+	sstLongtitude: "",	//Longtitude for Sea Surfacee Temperature 
 	//Other variables
         units: config.units,
         windunits: "bft", // choose from mph, bft
@@ -164,6 +168,7 @@ Module.register("MMM-Surf", {
         this.error = false;
         this.errorDescription = "";
 	this.getNOAA();
+	this.getNOAASST();
 	this.getDarkSky();
 	this.getMagicseaweed();
 	this.lastUpdatedTime = ""; 
@@ -174,6 +179,12 @@ Module.register("MMM-Surf", {
         if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_NOAA (1):"); }
         this.sendSocketNotification("GET_NOAA", this.config);
     }, //end getNOAA function
+
+	//get NOAA Sea Surface Temperature (satellite data v. Tide and Currents sensor observed data)
+    getNOAASST: function() {
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_NOAA_SST (1):"); }
+        this.sendSocketNotification("GET_NOAASST", this.config);
+    }, //end getNOAASST function
 
     getDarkSky: function() {
         if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): GET_DARKSKY (1):"); }
@@ -999,6 +1010,33 @@ Module.register("MMM-Surf", {
         if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
     }, // end processNOAA_WATERTEMP function
 
+    /* processNOAASST(data)
+     *
+     * Processes NOAA Sea Surface Temperature Data 
+     * for current (daily) water temperatures. This data is different than Tides & Currents data
+     * which is generally sourced from a sensor in the water. This is satellite derrived data.
+     */
+
+    processNOAASST: function(data) {
+        //Example JSON structure:
+		//{"time":"2019-12-28T00:00:00Z","level":1,"latitude":-36.00216,"longitude":160.65654,"sst":19.913782}
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " Processing Data: NOAA SST Water Temp (6.alt)") };
+        if (this.config.debug === 1) { Log.info(data); } //print Object to browser console
+		var measurementTime = data.time;
+        var coords_lat = data.latitude; 
+        var coords_lon = data.longitude; 
+        this.WaterTemp2 = data.sst;
+        this.WaterTemp2F = this.convertTemp("CF",data.sst);
+        if (this.config.debug === 1) {
+            Log.info("***CURRENT WATER*** temperature at " + coords_lat + " / " +coords_lon + " is: " + Math.round(this.WaterTemp2)  +"C ("+ Math.round(this.WaterTemp2F) +"F) at " + measurementTime + "(UTC).");
+        }
+
+        this.loaded = true;
+        this.updateDom(this.config.animationSpeed);
+        if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' Rendering NOAA SST data to UI (7)'); }
+        if (this.config.debug === 1) { Log.info('-------------------------------------------------------------------'); }
+    }, // end processNOAASST function
+
 
     /* processMAGICSEAWEED (data)
      *
@@ -1471,6 +1509,27 @@ Module.register("MMM-Surf", {
         return parseFloat(temperature).toFixed(this.config.roundTmpDecs);
     },
 
+    /* 
+     * Convert a temperature from Celsius <-> Fahrenheit.
+     *
+     * arguments: direction & temperature to convert
+	 * Direction:
+	 * FC = Fahrenheit to Celsius
+     * CF = Celsius to Fahrenheit
+     * return number - Converted Temperature.
+     */
+    convertTemp: function(direction, temp) {
+	    var convertedTemp = "";
+		if (direction === "FC") {
+			convertedTemp = (temp-32)/1.8;
+		}
+		if (direction === "CF") {
+			convertedTemp = (temp*1.8)+32;
+		}
+		return convertedTemp;
+		
+    },
+
     // ------------------ SOCKET CONFIGURATION --------------------------
     socketNotificationReceived: function(notification, payload) {
             var self = this;
@@ -1488,12 +1547,16 @@ Module.register("MMM-Surf", {
 		Log.info(payload);
 		    self.processNOAA_WATERTEMP(JSON.parse(payload));
             }
+            if (notification === 'NOAAGLOBALSST') {
+                if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
+                Log.info(payload);
+                    self.processNOAASST(JSON.parse(payload));
+            }
             if (notification === 'MAGICSEAWEED') {
                 if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' SOCKET(RECEIVED FROM HELPER) (5): ' + notification + ' Payload data'); }
                 self.processMAGICSEAWEED(JSON.parse(payload));
 		    	if (this.config.debug === 1) { Log.info(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " SOCKET(SEND TO HELPER): UPDATE_TIMER"); }
 		    	this.sendSocketNotification("UPDATE_TIMER", this.config);
-		    
             }
             if (notification === 'HELPER_MESSAGE') {
                 if (this.config.debug === 1) { Log.info(payload); }

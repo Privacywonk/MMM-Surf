@@ -26,6 +26,9 @@ module.exports = NodeHelper.create({
         //Magicseaweed Surf Forecast
         this.MAGICfetcherRunning = false;
         this.magicseaweed = "";
+	//NOAA Global SST
+	this.SSTfetcherRunning = false;
+	this.noaaSST = "";
 	this.started = false;
     },
 
@@ -47,6 +50,7 @@ module.exports = NodeHelper.create({
 			self.fetchNOAAData(self);
 			self.fetchDarkSky(self);
 			self.fetchMagicseaweedData(self);
+			self.fetchNOAASSTData(self);
 			tempTime = moment();
 			tempTime.add(nextload, 'ms');
 			console.log ("UPDATE LOAD - NEXT LOAD TIME: " +tempTime.format('YYYY-MM-DD >> HH:mm:ss.SSSZZ'));
@@ -146,9 +150,9 @@ module.exports = NodeHelper.create({
                 }
             } //end request(function())
         ); //end request() for Water Temp
+	
         //NOAA Tide Data
         //NOAA asks us to send the application name when making API requests
-
         var NOAAtideURL = encodeURI(this.config.NOAAapiBase + "datagetter?product=predictions&application=MMM-Surfer&begin_date=" + todayString + "&end_date=" + tomorrowString + "&datum=MLLW&station=" + station_id + "&time_zone=" + noaatz + "&units=english&interval=hilo&format=json");
         if (this.config.debug === 1) {
             apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " HELPER: NOAA Tide Data API REQUEST(3): " + NOAAtideURL;
@@ -179,6 +183,49 @@ module.exports = NodeHelper.create({
         ); //end request() for NOAA Tides
         this.NOAAfetcherRunning = false;
     }, // end fetchNOAA function
+
+	//NOAA Global SST Query
+    fetchNOAASSTData: function() {
+        var self = this;
+        var apiMessage = "";
+		var dateISO8601=moment().format('YYYY-MM-DD');
+		var NOAAGlobalSSTDate=dateISO8601+"T00:00:00Z";
+        this.SSTfetcherRunning = true;
+        //Sample URL:https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncepRtofsG2DNowDailyProg_LonPM180.json?sst[(2019-12-28T00:00:00Z):1:(2019-12-28T00:00:00Z)][(1.0):1:(1.0)][(-36.00216):1:(-36.00216)][(160.65654):1:(160.65654)]"
+
+        var noaaSSTURL = encodeURI(this.config.noaaGlobalSSTBase + "[("+NOAAGlobalSSTDate+"):1:("+NOAAGlobalSSTDate+")][(1.0):1:(1.0)][("+this.config.sstLatitude+"):1:("+this.config.sstLatitude+")][("+this.config.sstLongtitude+"):1:("+this.config.sstLongtitude+")]");
+        if (this.config.debug === 1) {
+            apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + " HELPER: NOAA Global SST API REQUEST(3): " + noaaSSTURL;
+            self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+        }
+        request({
+                url: noaaSSTURL,
+                method: 'GET'
+            },
+            function(error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    //this.noaaSST = body;
+                        noaaSST = body;
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: NOAA Global SST API RESULT(4): Received';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                        self.sendSocketNotification('NOAAGLOBALSST', body);
+                        this.sendCachedTime = "";
+                        sendCachedTime = moment().format('YYYY-MM-DD >> HH:mm:ss.SSSZZ');
+                        self.sendSocketNotification('LAST_UPDATED', sendCachedTime); //send notification back to MMM-Surf.js to set update time
+
+
+                } else {
+                    if (self.config.debug === 1) {
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER: NOAA Global SST API ERROR(4):  ' + error;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage);
+                    }
+                }
+            } // end request(function())
+        ); //end NOAA Global SST request
+        this.SSTfetcherRunning = false;
+    }, //end NOAA Global SST function
 
     fetchMagicseaweedData: function() {
         var self = this;
@@ -274,6 +321,34 @@ module.exports = NodeHelper.create({
                     	self.sendSocketNotification('NOAA_TIDE_DATA', NOAATidePayload); // send previously fetched data		
 					
 	    }    //end NOAA Socket Config
+
+
+            if (notification === 'GET_NOAASST' && this.started == false) {
+                    // if we haven't started, go fetch data. Otherwise dont & send cached data back
+                this.config = payload;
+                if (this.config.debug === 1) {
+                    apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Fetching Data (2)';
+                    self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                }
+                if (!this.SSTfetcherRunning) {
+                    this.fetchNOAASSTData();
+                } else {
+                    var self = this;
+                    if (this.config.debug === 1) {
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(ERROR)(2): ' + self.name + ': SSTfetcherRunning = ' + this.SSTfetcherRunning;
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                    }
+                } //end get live data if clause
+            } else if (notification === 'GET_NOAASST' && this.started == true) {
+                    //send cached NOAA SST data back to module for new client to load
+                if (this.config.debug === 1) {
+                        apiMessage = moment().format('YYYY-MM-DDTHH:mm:ss.SSSZZ') + ' HELPER_SOCKET(RECEIVED FROM MAIN): ' + notification + ': Sending cached data';
+                        self.sendSocketNotification('HELPER_MESSAGE', apiMessage)
+                        self.sendSocketNotification('NOAAGLOBALSST', noaaSST); //send previously fetched data
+               }
+
+            } //end NOAA SST Socket config
+
 	
             if (notification === 'GET_MAGIC' && this.started == false) {
 		    // if we haven't started, go fetch data. Otherwise dont & send cached data back
