@@ -1,5 +1,11 @@
 # MMM-Surf
 
+### Update July 2023:
+* DarkSky is dead. I will be updating the code to point to a great drop in replacement called [Pirate Weather] (https://github.com/alexander0042/pirateweather). Support that project!
+* MagicSeaweed was acquired by Surfline and the public API was closed down (RIP). I'll be looking for other sources for surf forecast info and/or exploring options with Surfline if they have private/paid for access and seeing what could be done with this project.
+
+### Legacy Readme
+
 MMM-Surf is a [Magic Mirror](https://github.com/MichMich/MagicMirror) module that will display weather (DarkSky), tides, water temp, and Magicseaweed forecast data for your favorite spot. It is currently North America centric, pulling tide and water temperature from the National Oceanic and Atmospheric Administration (NOAA). I am actively searching international data sources for tide and water temps, please open an issue if you know of sources that provide publicly accessible APIs.
 
 The surf forecast data is minimized from the normal Magicseaweed interface to focus on "at-a-glance" information only: The [Magicseaweed star rating system](https://magicseaweed.com/help/forecast-table/star-rating), height of swell at periodicity, swell direction, wind direction, and speed. These bits of information are color coded based on certain configurable items (see below): Green means the condition is right for the spot, orange means acceptable, red is slop. If I see all green, I go.  
